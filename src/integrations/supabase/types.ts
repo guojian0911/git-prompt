@@ -74,6 +74,86 @@ export type Database = {
         }
         Relationships: []
       }
+      prompt_stars: {
+        Row: {
+          created_at: string
+          id: string
+          prompt_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prompt_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prompt_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prompt_stars_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prompts: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          description: string
+          example_output: string | null
+          fork_count: number
+          id: string
+          is_public: boolean
+          stars_count: number
+          tags: string[] | null
+          title: string
+          updated_at: string
+          user_id: string
+          view_count: number
+        }
+        Insert: {
+          category: string
+          content: string
+          created_at?: string
+          description: string
+          example_output?: string | null
+          fork_count?: number
+          id?: string
+          is_public?: boolean
+          stars_count?: number
+          tags?: string[] | null
+          title: string
+          updated_at?: string
+          user_id: string
+          view_count?: number
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          description?: string
+          example_output?: string | null
+          fork_count?: number
+          id?: string
+          is_public?: boolean
+          stars_count?: number
+          tags?: string[] | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+          view_count?: number
+        }
+        Relationships: []
+      }
       tutorials: {
         Row: {
           config: Json | null

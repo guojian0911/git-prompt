@@ -11,16 +11,18 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const promptFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required").max(200, "Description must be less than 200 characters"),
-  category: z.string().min(1, "Category is required"),
+  title: z.string().min(1, "标题不能为空").max(100, "标题不能超过100个字符"),
+  description: z.string().min(1, "描述不能为空").max(500, "描述不能超过500个字符"),
+  content: z.string().min(1, "提示词内容不能为空"),
+  category: z.string().min(1, "请选择分类"),
   tags: z.string(),
-  content: z.string().min(1, "Prompt content is required"),
-  exampleOutput: z.string(),
+  example_output: z.string().optional(),
+  is_public: z.boolean().default(true),
   terms: z.boolean().refine((val) => val === true, {
-    message: "You must agree to the terms and conditions",
+    message: "您必须同意服务条款",
   }),
   forkedFrom: z.string().optional(),
 });
@@ -30,15 +32,15 @@ type PromptFormValues = z.infer<typeof promptFormSchema>;
 const categories = [
   { value: "chatgpt", label: "ChatGPT" },
   { value: "gpt-4", label: "GPT-4" },
-  { value: "writing", label: "Writing" },
-  { value: "coding", label: "Coding" },
-  { value: "business", label: "Business" },
-  { value: "education", label: "Education" },
-  { value: "marketing", label: "Marketing" },
-  { value: "creative", label: "Creative" },
-  { value: "productivity", label: "Productivity" },
-  { value: "research", label: "Research" },
-  { value: "产品经理", label: "产品经理" },
+  { value: "writing", label: "写作" },
+  { value: "coding", label: "编程" },
+  { value: "business", label: "商业" },
+  { value: "education", label: "教育" },
+  { value: "marketing", label: "营销" },
+  { value: "creative", label: "创意" },
+  { value: "productivity", label: "生产力" },
+  { value: "research", label: "研究" },
+  { value: "product", label: "产品经理" },
 ];
 
 export default function SubmitPrompt() {
@@ -56,7 +58,8 @@ export default function SubmitPrompt() {
       category: "",
       tags: "",
       content: "",
-      exampleOutput: "",
+      example_output: "",
+      is_public: true,
       terms: false,
       forkedFrom: "",
     },
@@ -73,7 +76,7 @@ export default function SubmitPrompt() {
     }
   }, [user, isLoading, navigate, location.pathname]);
 
-  // Handle fork data if available
+  // 处理 fork 数据
   useEffect(() => {
     if (forkedPrompt.forkedFrom) {
       form.reset({
@@ -82,12 +85,11 @@ export default function SubmitPrompt() {
         category: forkedPrompt.category || "",
         tags: forkedPrompt.tags || "",
         content: forkedPrompt.content || "",
-        exampleOutput: forkedPrompt.exampleOutput || "",
+        example_output: forkedPrompt.exampleOutput || "",
+        is_public: true,
         terms: false,
         forkedFrom: forkedPrompt.forkedFrom,
       });
-
-      toast.info("您正在基于一个已有提示词创建新提示词");
     }
   }, [forkedPrompt, form]);
 
@@ -99,15 +101,28 @@ export default function SubmitPrompt() {
     }
 
     try {
-      // 这里先模拟提交，后续会替换为实际的 API 调用
-      console.log("Form data:", data);
-      toast.success("Your prompt has been submitted successfully!");
-    } catch (error) {
-      toast.error("Failed to submit prompt. Please try again.");
+      const { error: insertError } = await supabase.from("prompts").insert({
+        user_id: user.id,
+        title: data.title,
+        description: data.description,
+        content: data.content,
+        category: data.category,
+        tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
+        example_output: data.example_output || null,
+        is_public: data.is_public,
+      });
+
+      if (insertError) throw insertError;
+
+      toast.success("提示词提交成功！");
+      navigate("/");
+    } catch (error: any) {
+      console.error("Error submitting prompt:", error);
+      toast.error(error.message || "提交失败，请重试");
     }
   };
 
-  // 如果正在加载认证状态或检查认证，显示简单的加载提示
+  // 如果正在加载认证状态或检查认证，显示加载提示
   if (isLoading || checkingAuth) {
     return (
       <div className="container py-12 flex justify-center items-center">
@@ -116,9 +131,6 @@ export default function SubmitPrompt() {
       </div>
     );
   }
-
-  // 如果没有用户，重定向已经在useEffect中处理
-  if (!user) return null;
 
   return (
     <div className="container py-12 max-w-4xl mx-auto px-4">
@@ -183,7 +195,7 @@ export default function SubmitPrompt() {
             <label className="text-sm font-medium" htmlFor="tags">标签</label>
             <Input
               id="tags"
-              placeholder="例如：推理, 生产力, 编程"
+              placeholder="用逗号分隔标签，例如：推理, 生产力, 编程"
               {...form.register("tags")}
             />
           </div>
@@ -202,22 +214,26 @@ export default function SubmitPrompt() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="exampleOutput">示例输出（可选）</label>
+            <label className="text-sm font-medium" htmlFor="example_output">示例输出（可选）</label>
             <Textarea
-              id="exampleOutput"
+              id="example_output"
               className="min-h-[120px]"
               placeholder="提供一个由您的提示词生成的输出示例"
-              {...form.register("exampleOutput")}
+              {...form.register("example_output")}
             />
           </div>
 
-          {forkedPrompt.forkedFrom && (
-            <input 
-              type="hidden" 
-              {...form.register("forkedFrom")} 
-              value={forkedPrompt.forkedFrom} 
-            />
-          )}
+          <div className="space-y-2">
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="is_public"
+                {...form.register("is_public")}
+              />
+              <label htmlFor="is_public" className="text-sm font-medium">
+                公开分享
+              </label>
+            </div>
+          </div>
 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
