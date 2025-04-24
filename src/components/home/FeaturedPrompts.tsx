@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -14,6 +13,8 @@ const creativeWritingPrompt = {
   content: "请作为我的创意写作助手。我正在寻找关于[主题]的创意写作灵感。请帮我：\n1. 提供3-5个独特的故事创意或角度\n2. 对于每个创意，给出一个引人入胜的开头段落\n3. 提供一些可能的角色描述和发展方向\n4. 建议一些可以增添深度的情节转折或隐喻\n5. 推荐适合这种写作的风格和语调\n\n尽量避免常见的比喻和陈词滥调，提供那些有创新性的、能引发读者共鸣的创意。",
   category: "创意写作",
   is_public: true,
+  user_id: null,
+  fork_from: null,
   author: {
     name: "系统",
     avatar: ""
@@ -22,7 +23,8 @@ const creativeWritingPrompt = {
     rating: 4.9,
     comments: 27,
     stars: 0
-  }
+  },
+  tags: []
 };
 
 // Mock data for categories (keep this for now)
@@ -39,51 +41,79 @@ const FeaturedPrompts = () => {
   const [activeTab, setActiveTab] = useState("featured");
   const navigate = useNavigate();
 
-  // Fetch public prompts
+  // Fetch public prompts - fixed query to work around relationship error
   const { data: publicPrompts = [], isLoading } = useQuery({
     queryKey: ['featured-prompts'],
     queryFn: async () => {
-      // Fix: Adjust the query to properly join with profiles table
-      const { data: prompts, error } = await supabase
-        .from('prompts')
-        .select(`
-          id,
-          title, 
-          description, 
-          content,
-          category,
-          is_public,
-          user_id,
-          fork_from,
-          stars_count,
-          profiles:user_id(username, avatar_url)
-        `)
-        .eq('is_public', true)
-        .order('created_at', { ascending: false })
-        .limit(3);
+      try {
+        // First fetch the prompts
+        const { data: prompts, error } = await supabase
+          .from('prompts')
+          .select(`
+            id,
+            title, 
+            description, 
+            content,
+            category,
+            is_public,
+            user_id,
+            fork_from,
+            stars_count,
+            tags
+          `)
+          .eq('is_public', true)
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-      if (error) {
-        console.error("Error fetching prompts:", error);
-        throw error;
-      }
-
-      return prompts.map(prompt => ({
-        ...prompt,
-        author: {
-          name: prompt.profiles?.username || 'Anonymous',
-          avatar: prompt.profiles?.avatar_url
-        },
-        stats: {
-          rating: 0,
-          comments: 0,
-          stars: prompt.stars_count || 0
+        if (error) {
+          console.error("Error fetching prompts:", error);
+          throw error;
         }
-      }));
+
+        // Then fetch profile information for each prompt's user_id
+        const promptsWithProfiles = await Promise.all(
+          prompts.map(async (prompt) => {
+            let username = 'Anonymous';
+            let avatar_url = null;
+
+            if (prompt.user_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, avatar_url')
+                .eq('id', prompt.user_id)
+                .single();
+
+              if (profile) {
+                username = profile.username || 'Anonymous';
+                avatar_url = profile.avatar_url;
+              }
+            }
+
+            return {
+              ...prompt,
+              author: {
+                name: username,
+                avatar: avatar_url
+              },
+              stats: {
+                rating: 0,
+                comments: 0,
+                stars: prompt.stars_count || 0
+              }
+            };
+          })
+        );
+
+        return promptsWithProfiles;
+      } catch (error) {
+        console.error("Error processing prompts:", error);
+        return [];
+      }
     }
   });
 
   // Handler for forking a prompt
-  const handleForkPrompt = (prompt) => {
+  const handleForkPrompt = (prompt: any) => {
     navigate('/submit', { 
       state: { 
         forkedPrompt: {
@@ -135,13 +165,17 @@ const FeaturedPrompts = () => {
           {allPrompts.map((prompt) => (
             <PromptCard
               key={prompt.id}
-              {...prompt}
-              stats={{
-                rating: 0,
-                comments: 0,
-                stars: prompt.stats?.stars || 0
-              }}
+              id={prompt.id}
+              title={prompt.title}
+              description={prompt.description}
+              content={prompt.content}
+              category={prompt.category}
+              is_public={prompt.is_public}
+              user_id={prompt.user_id}
               fork_from={prompt.fork_from}
+              author={prompt.author}
+              stats={prompt.stats}
+              tags={prompt.tags}
               onFork={() => handleForkPrompt(prompt)}
             />
           ))}
