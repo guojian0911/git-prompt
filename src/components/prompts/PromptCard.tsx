@@ -15,6 +15,7 @@ interface PromptCardProps {
   category: string;
   is_public: boolean;
   user_id?: string;
+  fork_from?: string | null;
   author: {
     name: string;
     avatar?: string;
@@ -38,6 +39,7 @@ const PromptCard = ({
   author,
   stats,
   user_id,
+  fork_from,
   tags = []
 }: PromptCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -49,7 +51,8 @@ const PromptCard = ({
   const isPersonalPage = location.pathname === '/profile';
   const isOwner = user?.id === user_id;
   const showForkButton = !isPersonalPage;
-  const showEditButton = isPersonalPage && isOwner;
+  const showEditButton = isPersonalPage;
+  const isForkPrompt = !!fork_from;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -76,12 +79,20 @@ const PromptCard = ({
     <Card className="group hover:shadow-lg transition-all duration-300">
       <CardHeader className="space-y-0 p-4">
         <div className="flex justify-between items-start">
-          <Link
-            to={`/category/${category.toLowerCase()}`}
-            className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-          >
-            {category}
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to={`/category/${category.toLowerCase()}`}
+              className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            >
+              {category}
+            </Link>
+            {isForkPrompt && (
+              <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
+                <GitFork className="w-3 h-3 mr-1" />
+                Fork
+              </Badge>
+            )}
+          </div>
           <div className="flex gap-2">
             <button
               onClick={handleCopy}
