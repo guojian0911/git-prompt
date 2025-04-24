@@ -1,11 +1,12 @@
 
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Copy, Edit, Star, MessageSquare, GitFork } from "lucide-react";
+import { Copy, Edit, Star, MessageSquare, GitFork, Share2 } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PromptCardProps {
   id: string;
@@ -51,9 +52,23 @@ const PromptCard = ({
   
   const isPersonalPage = location.pathname === '/profile';
   const isOwner = user?.id === user_id;
-  const showForkButton = !isPersonalPage;
-  const showEditButton = isPersonalPage;
   const isForkPrompt = !!fork_from;
+
+  const handleShare = async () => {
+    try {
+      const { error } = await supabase
+        .from('prompts')
+        .update({ is_public: true })
+        .eq('id', id)
+        .eq('user_id', user?.id);
+
+      if (error) throw error;
+      toast.success("提示词已成功公开分享！");
+    } catch (error: any) {
+      console.error('Error sharing prompt:', error);
+      toast.error("分享失败，请重试");
+    }
+  };
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -87,6 +102,11 @@ const PromptCard = ({
             >
               {category}
             </Link>
+            {!is_public && isPersonalPage && (
+              <Badge variant="secondary" className="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300">
+                Private
+              </Badge>
+            )}
             {isForkPrompt && (
               <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
                 <GitFork className="w-3 h-3 mr-1" />
@@ -101,7 +121,17 @@ const PromptCard = ({
             >
               <Copy className="w-4 h-4" />
             </button>
-            {showEditButton && (
+            
+            {isPersonalPage && !is_public && (
+              <button
+                onClick={handleShare}
+                className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            )}
+
+            {isPersonalPage && (
               <Link
                 to={`/submit?edit=${id}`}
                 state={{
@@ -119,14 +149,6 @@ const PromptCard = ({
                 className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <Edit className="w-4 h-4" />
-              </Link>
-            )}
-            {showForkButton && (
-              <Link
-                to={`/prompt/${id}`}
-                className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-              >
-                <GitFork className="w-4 h-4" />
               </Link>
             )}
           </div>
@@ -203,12 +225,6 @@ const PromptCard = ({
               <MessageSquare className="w-4 h-4" />
               <span className="text-sm">{stats.comments}</span>
             </Link>
-            {showForkButton && (
-              <div className="flex items-center gap-1.5">
-                <GitFork className="w-4 h-4" />
-                <span className="text-sm">{stats.forks || 0}</span>
-              </div>
-            )}
           </div>
         </div>
       </CardFooter>

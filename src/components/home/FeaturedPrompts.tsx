@@ -84,6 +84,9 @@ const categories = [
 const FeaturedPrompts = () => {
   const [activeTab, setActiveTab] = useState("featured");
 
+  // Filter out private prompts
+  const publicPrompts = featuredPrompts.filter(prompt => prompt.is_public);
+
   return (
     <div className="py-16 bg-slate-50 dark:bg-slate-900/30">
       <div className="container mx-auto px-4">
@@ -115,7 +118,7 @@ const FeaturedPrompts = () => {
 
         {/* Prompts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {featuredPrompts.map((prompt) => (
+          {publicPrompts.map((prompt) => (
             <PromptCard key={prompt.id} {...prompt} />
           ))}
         </div>
