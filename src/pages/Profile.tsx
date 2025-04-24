@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -80,27 +79,19 @@ const Profile = () => {
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 将在下一步实现提示词列表 */}
-            </div>
+            <PromptList userId={user.id} filter="all" />
           </TabsContent>
           
           <TabsContent value="public" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 将在下一步实现提示词列表 */}
-            </div>
+            <PromptList userId={user.id} filter="public" />
           </TabsContent>
 
           <TabsContent value="private" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 将在下一步实现提示词列表 */}
-            </div>
+            <PromptList userId={user.id} filter="private" />
           </TabsContent>
 
           <TabsContent value="starred" className="mt-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {/* 将在下一步实现提示词列表 */}
-            </div>
+            <PromptList userId={user.id} filter="starred" />
           </TabsContent>
         </Tabs>
       </div>
