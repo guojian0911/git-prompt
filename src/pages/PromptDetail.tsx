@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,50 +15,69 @@ import {
 import { toast } from "sonner";
 import CommentList from "@/components/comments/CommentList";
 import CommentForm from "@/components/comments/CommentForm";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PromptDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [copied, setCopied] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
   const [starCount, setStarCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
 
-  const prompt = {
-    id: id,
-    title: "高效的产品需求文档生成提示词",
-    description: "一个帮助快速生成高质量PRD文档的AI提示词，包含项目概述、功能需求、用户流程等完整章节。",
-    content: `请帮我编写一份完整的产品需求文档 (PRD)，包含以下部分：
-1. 项目概述
-- 背景介绍
-- 目标用户
-- 核心价值主张
+  // Fetch prompt data from Supabase
+  const { data: prompt, isLoading, error } = useQuery({
+    queryKey: ['prompt', id],
+    queryFn: async () => {
+      if (!id) throw new Error('No prompt ID provided');
 
-2. 功能需求
-- 核心功能列表
-- 用户界面要求
-- 性能要求
+      // Get prompt data
+      const { data: promptData, error: promptError } = await supabase
+        .from('prompts')
+        .select('*')
+        .eq('id', id)
+        .single();
 
-3. 用户流程
-- 主要用例
-- 操作流程
-- 异常处理
+      if (promptError) throw promptError;
+      if (!promptData) throw new Error('Prompt not found');
 
-请确保文档结构清晰，重点突出，并适当添加图表说明。`,
-    category: "产品经理",
-    author: {
-      name: "产品洞察者",
-      avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=product",
-      bio: "专注产品设计与用户体验"
-    },
-    stats: {
-      rating: 4.8,
-      comments: 12,
-      forks: 5,
-      stars: 24
-    },
-    tags: ["产品文档", "PRD", "需求分析"]
-  };
+      // Get author information
+      const { data: authorProfile } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', promptData.user_id)
+        .single();
+
+      // Get comments count for this prompt (currently using mock data)
+      const commentsCount = 2; // In a real app, you'd fetch this from a comments table
+
+      return {
+        ...promptData,
+        author: {
+          name: authorProfile?.username || 'Anonymous',
+          avatar: authorProfile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${authorProfile?.username || 'anon'}`,
+          bio: "User" // This could be fetched from an extended profile in the future
+        },
+        stats: {
+          rating: 0, // Not implemented yet
+          comments: commentsCount,
+          forks: promptData.fork_count || 0,
+          stars: promptData.stars_count || 0
+        },
+        tags: promptData.tags || []
+      };
+    }
+  });
+
+  // Update star count from prompt data when it loads
+  useEffect(() => {
+    if (prompt) {
+      setStarCount(prompt.stats.stars);
+    }
+  }, [prompt]);
 
   const [comments, setComments] = useState([
     {
@@ -81,6 +101,7 @@ const PromptDetail = () => {
   ]);
 
   const handleCopy = () => {
+    if (!prompt) return;
     navigator.clipboard.writeText(prompt.content);
     setCopied(true);
     toast.success("提示词已复制到剪贴板");
@@ -88,14 +109,18 @@ const PromptDetail = () => {
   };
 
   const handleFork = () => {
+    if (!prompt) return;
+    
     navigate("/submit", { 
       state: { 
-        forkedFrom: prompt.id,
-        title: `Copy of ${prompt.title}`,
-        content: prompt.content,
-        category: prompt.category,
-        tags: prompt.tags.join(", "),
-        description: prompt.description,
+        forkedPrompt: {
+          title: `Copy of ${prompt.title}`,
+          description: prompt.description,
+          content: prompt.content,
+          category: prompt.category,
+          tags: prompt.tags || [],
+          forkedFrom: prompt.id
+        }
       } 
     });
     toast.info("已创建提示词副本，您可以在此基础上修改后提交");
@@ -111,6 +136,36 @@ const PromptDetail = () => {
     }
     setIsStarred(!isStarred);
   };
+
+  if (isLoading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <div className="animate-pulse space-y-6">
+            <div className="h-8 bg-slate-200 rounded w-3/4"></div>
+            <div className="h-4 bg-slate-200 rounded w-1/2"></div>
+            <div className="h-64 bg-slate-200 rounded"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !prompt) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold mb-4">提示词不存在或加载失败</h2>
+          <p className="mb-6 text-slate-600 dark:text-slate-400">
+            无法加载所请求的提示词，它可能已被删除或您可能没有查看权限。
+          </p>
+          <Link to="/" className="btn-outline">
+            返回首页
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -168,7 +223,7 @@ const PromptDetail = () => {
                   ) : (
                     <Star className="w-5 h-5 mr-1" />
                   )}
-                  <span>{starCount || prompt.stats.stars}</span>
+                  <span>{starCount}</span>
                 </button>
                 <button 
                   onClick={() => setShowComments(!showComments)}

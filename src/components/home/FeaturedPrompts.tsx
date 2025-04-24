@@ -24,6 +24,11 @@ const FeaturedPrompts = () => {
         } 
       } 
     });
+    
+    // Add toast notification for user feedback
+    if (window.Sonner) {
+      window.Sonner.toast.info("已创建提示词副本，您可以在此基础上修改后提交");
+    }
   };
 
   return (
