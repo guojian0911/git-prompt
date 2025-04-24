@@ -1,15 +1,28 @@
 
 import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { GitFork, Copy, MessageSquare, Star } from "lucide-react";
+import { 
+  GitFork, 
+  Copy, 
+  MessageSquare, 
+  Star, 
+  StarOff,
+  ArrowLeft 
+} from "lucide-react";
 import { toast } from "sonner";
+import CommentList from "@/components/comments/CommentList";
+import CommentForm from "@/components/comments/CommentForm";
 
 const PromptDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [isStarred, setIsStarred] = useState(false);
+  const [starCount, setStarCount] = useState(0);
+  const [showComments, setShowComments] = useState(false);
 
   // Mock data - will be replaced with real data from backend
   const prompt = {
@@ -42,10 +55,33 @@ const PromptDetail = () => {
     stats: {
       rating: 4.8,
       comments: 12,
-      forks: 5
+      forks: 5,
+      stars: 24
     },
     tags: ["产品文档", "PRD", "需求分析"]
   };
+
+  // Mock comments
+  const [comments, setComments] = useState([
+    {
+      id: "1",
+      author: {
+        name: "设计师小王",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=designer"
+      },
+      content: "这个提示词太棒了！帮我节省了很多写PRD的时间。",
+      createdAt: "2天前"
+    },
+    {
+      id: "2",
+      author: {
+        name: "产品菜鸟",
+        avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=newbie"
+      },
+      content: "适合新手产品经理使用，文档结构非常清晰。",
+      createdAt: "5天前"
+    }
+  ]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(prompt.content);
@@ -55,13 +91,45 @@ const PromptDetail = () => {
   };
 
   const handleFork = () => {
-    // Fork functionality will be implemented later
-    toast.info("Fork 功能即将上线");
+    // Navigate to submit page with prefilled data
+    navigate("/submit", { 
+      state: { 
+        forkedFrom: prompt.id,
+        title: `Copy of ${prompt.title}`,
+        content: prompt.content,
+        category: prompt.category,
+        tags: prompt.tags.join(", "),
+        description: prompt.description,
+      } 
+    });
+    toast.info("已创建提示词副本，您可以在此基础上修改后提交");
+  };
+
+  const handleToggleStar = () => {
+    if (isStarred) {
+      setStarCount(prev => prev - 1);
+      toast.success("已取消收藏");
+    } else {
+      setStarCount(prev => prev + 1);
+      toast.success("已添加到收藏");
+    }
+    setIsStarred(!isStarred);
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
+        {/* Back link */}
+        <div className="mb-6">
+          <Link 
+            to="/" 
+            className="inline-flex items-center text-sm text-slate-600 dark:text-slate-400 hover:text-shumer-purple transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-1" />
+            返回首页
+          </Link>
+        </div>
+        
         {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
@@ -99,14 +167,24 @@ const PromptDetail = () => {
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">
-                <div className="flex items-center">
-                  <Star className="w-5 h-5 text-amber-400 mr-1" />
-                  <span>{prompt.stats.rating}</span>
-                </div>
-                <div className="flex items-center">
+                <button 
+                  onClick={handleToggleStar}
+                  className="flex items-center text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+                >
+                  {isStarred ? (
+                    <Star className="w-5 h-5 text-amber-400 mr-1 fill-amber-400" />
+                  ) : (
+                    <Star className="w-5 h-5 mr-1" />
+                  )}
+                  <span>{starCount || prompt.stats.stars}</span>
+                </button>
+                <button 
+                  onClick={() => setShowComments(!showComments)}
+                  className="flex items-center text-slate-700 dark:text-slate-300 hover:text-shumer-purple transition-colors"
+                >
                   <MessageSquare className="w-5 h-5 mr-1" />
-                  <span>{prompt.stats.comments}</span>
-                </div>
+                  <span>{comments.length}</span>
+                </button>
                 <div className="flex items-center">
                   <GitFork className="w-5 h-5 mr-1" />
                   <span>{prompt.stats.forks}</span>
@@ -139,15 +217,16 @@ const PromptDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Comments section - to be implemented */}
+        {/* Comments section */}
         <Card>
           <CardHeader>
-            <h3 className="text-xl font-semibold">评论</h3>
+            <h3 className="text-xl font-semibold flex items-center">
+              <MessageSquare className="w-5 h-5 mr-2" /> 评论
+            </h3>
           </CardHeader>
-          <CardContent>
-            <p className="text-center text-slate-500 dark:text-slate-400 py-8">
-              评论功能即将上线
-            </p>
+          <CardContent className="space-y-6">
+            <CommentForm promptId={id || ""} />
+            <CommentList comments={comments} />
           </CardContent>
         </Card>
       </div>

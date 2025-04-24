@@ -1,5 +1,6 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -20,6 +21,7 @@ const promptFormSchema = z.object({
   terms: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms and conditions",
   }),
+  forkedFrom: z.string().optional(),
 });
 
 type PromptFormValues = z.infer<typeof promptFormSchema>;
@@ -35,9 +37,13 @@ const categories = [
   { value: "creative", label: "Creative" },
   { value: "productivity", label: "Productivity" },
   { value: "research", label: "Research" },
+  { value: "产品经理", label: "产品经理" },
 ];
 
 export default function SubmitPrompt() {
+  const location = useLocation();
+  const forkedPrompt = location.state || {};
+  
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptFormSchema),
     defaultValues: {
@@ -48,8 +54,27 @@ export default function SubmitPrompt() {
       content: "",
       exampleOutput: "",
       terms: false,
+      forkedFrom: "",
     },
   });
+
+  // Handle fork data if available
+  useEffect(() => {
+    if (forkedPrompt.forkedFrom) {
+      form.reset({
+        title: forkedPrompt.title || "",
+        description: forkedPrompt.description || "",
+        category: forkedPrompt.category || "",
+        tags: forkedPrompt.tags || "",
+        content: forkedPrompt.content || "",
+        exampleOutput: forkedPrompt.exampleOutput || "",
+        terms: false,
+        forkedFrom: forkedPrompt.forkedFrom,
+      });
+
+      toast.info("您正在基于一个已有提示词创建新提示词");
+    }
+  }, [forkedPrompt, form]);
 
   const onSubmit = async (data: PromptFormValues) => {
     try {
@@ -64,19 +89,24 @@ export default function SubmitPrompt() {
   return (
     <div className="container py-12 max-w-4xl mx-auto px-4">
       <div className="mb-8">
-        <h1 className="text-3xl md:text-4xl font-bold mb-4">Submit a Prompt</h1>
+        <h1 className="text-3xl md:text-4xl font-bold mb-4">
+          {forkedPrompt.forkedFrom ? "Fork 并修改提示词" : "提交新提示词"}
+        </h1>
         <p className="text-muted-foreground max-w-2xl">
-          Share your AI prompt with the community. Great prompts are clear, specific, and provide context for the AI model.
+          {forkedPrompt.forkedFrom 
+            ? "您正在基于一个已有提示词创建新版本。请修改并提升它，然后分享给社区。" 
+            : "与社区分享您的AI提示词。好的提示词应当明确、具体并为AI模型提供足够的上下文信息。"
+          }
         </p>
       </div>
 
       <div className="bg-card rounded-lg border shadow-sm p-6">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="title">Title</label>
+            <label className="text-sm font-medium" htmlFor="title">标题</label>
             <Input
               id="title"
-              placeholder="E.g., Expert Reasoning Guide"
+              placeholder="例如：专家推理指南"
               {...form.register("title")}
             />
             {form.formState.errors.title && (
@@ -85,10 +115,10 @@ export default function SubmitPrompt() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="description">Description</label>
+            <label className="text-sm font-medium" htmlFor="description">描述</label>
             <Textarea
               id="description"
-              placeholder="Briefly describe what your prompt does and how it helps users"
+              placeholder="简要描述您的提示词的功能和它如何帮助用户"
               {...form.register("description")}
             />
             {form.formState.errors.description && (
@@ -97,13 +127,13 @@ export default function SubmitPrompt() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="category">Category</label>
+            <label className="text-sm font-medium" htmlFor="category">分类</label>
             <select
               id="category"
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               {...form.register("category")}
             >
-              <option value="">Select category</option>
+              <option value="">选择分类</option>
               {categories.map((category) => (
                 <option key={category.value} value={category.value}>
                   {category.label}
@@ -116,20 +146,20 @@ export default function SubmitPrompt() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="tags">Tags</label>
+            <label className="text-sm font-medium" htmlFor="tags">标签</label>
             <Input
               id="tags"
-              placeholder="E.g., reasoning, productivity, programming"
+              placeholder="例如：推理, 生产力, 编程"
               {...form.register("tags")}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="content">Prompt Content</label>
+            <label className="text-sm font-medium" htmlFor="content">提示词内容</label>
             <Textarea
               id="content"
               className="min-h-[200px] font-mono"
-              placeholder="Paste your prompt content here..."
+              placeholder="在此粘贴您的提示词内容..."
               {...form.register("content")}
             />
             {form.formState.errors.content && (
@@ -138,21 +168,29 @@ export default function SubmitPrompt() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="exampleOutput">Example Output (Optional)</label>
+            <label className="text-sm font-medium" htmlFor="exampleOutput">示例输出（可选）</label>
             <Textarea
               id="exampleOutput"
               className="min-h-[120px]"
-              placeholder="Provide an example of the output generated by your prompt"
+              placeholder="提供一个由您的提示词生成的输出示例"
               {...form.register("exampleOutput")}
             />
           </div>
+
+          {forkedPrompt.forkedFrom && (
+            <input 
+              type="hidden" 
+              {...form.register("forkedFrom")} 
+              value={forkedPrompt.forkedFrom} 
+            />
+          )}
 
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Checkbox id="terms" {...form.register("terms")} />
               <label htmlFor="terms" className="text-sm">
-                I agree to the <a href="/terms" className="text-primary hover:underline">Terms of Service</a> and{" "}
-                <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>
+                我同意 <a href="/terms" className="text-primary hover:underline">服务条款</a> 和{" "}
+                <a href="/privacy" className="text-primary hover:underline">隐私政策</a>
               </label>
             </div>
             {form.formState.errors.terms && (
@@ -160,7 +198,9 @@ export default function SubmitPrompt() {
             )}
           </div>
 
-          <Button type="submit" className="w-full">Submit Prompt</Button>
+          <Button type="submit" className="w-full">
+            {forkedPrompt.forkedFrom ? "提交修改后的提示词" : "提交提示词"}
+          </Button>
         </form>
       </div>
 
@@ -170,13 +210,13 @@ export default function SubmitPrompt() {
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="m9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" x2="12.01" y1="17" y2="17"/></svg>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">Tips for great prompts</h3>
+            <h3 className="text-sm font-medium text-purple-800 dark:text-purple-300">优质提示词的技巧</h3>
             <ul className="mt-2 text-sm text-purple-700 dark:text-purple-200/80 list-disc pl-5 space-y-1">
-              <li>Be specific about what you want the AI to do</li>
-              <li>Provide context and background information</li>
-              <li>Use clear, concise language</li>
-              <li>Include examples if helpful</li>
-              <li>Specify the format you want the response in</li>
+              <li>明确指定您希望AI执行的任务</li>
+              <li>提供背景信息和上下文</li>
+              <li>使用清晰、简洁的语言</li>
+              <li>如果有帮助，可以包含示例</li>
+              <li>指定您希望回应的格式</li>
             </ul>
           </div>
         </div>
