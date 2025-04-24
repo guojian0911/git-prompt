@@ -1,33 +1,18 @@
+
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Menu, X, Search, Moon, Sun, LogIn, LogOut, User } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { SearchDialog } from "./navbar/SearchDialog";
+import { ThemeToggle } from "./navbar/ThemeToggle";
+import { NavLinks } from "./navbar/NavLinks";
+import { UserMenu } from "./navbar/UserMenu";
+import { MobileMenu } from "./navbar/MobileMenu";
 
 const Navbar = () => {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-    document.documentElement.classList.toggle("dark");
-  };
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("已成功退出登录");
-      navigate("/");
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
+  const { signOut } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 w-full backdrop-blur-lg bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-700/50">
@@ -38,170 +23,27 @@ const Navbar = () => {
             <span className="text-xl font-bold gradient-text">GitPrompt</span>
           </Link>
 
-          <div className="hidden md:flex items-center space-x-8">
-            <Link to="/explore" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
-              探索
-            </Link>
-            <Link to="/categories" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
-              分类
-            </Link>
-            <Link to="/submit" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
-              提交提示词
-            </Link>
-          </div>
+          <NavLinks />
 
           <div className="hidden md:flex items-center space-x-4">
-            <Dialog>
-              <DialogTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Search className="h-5 w-5" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>搜索提示词</DialogTitle>
-                </DialogHeader>
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
-                  <Input
-                    type="text"
-                    placeholder="输入关键词搜索..."
-                    className="pl-10"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            
-            {user ? (
-              <>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => navigate("/profile")}
-                >
-                  <User className="h-5 w-5" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleLogout}
-                  className="flex items-center gap-2"
-                >
-                  <LogOut className="h-4 w-4" />
-                  退出
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button 
-                  variant="ghost" 
-                  onClick={() => navigate("/auth/login")}
-                  className="flex items-center gap-2"
-                >
-                  <LogIn className="h-4 w-4" />
-                  登录
-                </Button>
-                <Button 
-                  className="btn-primary"
-                  onClick={() => navigate("/auth/signup")}
-                >
-                  注册
-                </Button>
-              </>
-            )}
+            <SearchDialog />
+            <ThemeToggle />
+            <UserMenu />
           </div>
 
           <div className="flex md:hidden items-center space-x-4">
-            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
+            <ThemeToggle />
             <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
               {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </Button>
           </div>
         </div>
 
-        {isOpen && (
-          <div className="md:hidden mt-4 py-4 border-t border-slate-200 dark:border-slate-700">
-            <div className="flex flex-col space-y-4">
-              <Link 
-                to="/explore" 
-                className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                onClick={() => setIsOpen(false)}
-              >
-                探索
-              </Link>
-              <Link 
-                to="/categories" 
-                className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                onClick={() => setIsOpen(false)}
-              >
-                分类
-              </Link>
-              <Link 
-                to="/submit" 
-                className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-                onClick={() => setIsOpen(false)}
-              >
-                提交提示词
-              </Link>
-              <div className="flex flex-col space-y-2 px-4 pt-2">
-                {user ? (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        navigate("/profile");
-                        setIsOpen(false);
-                      }}
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      个人中心
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start"
-                      onClick={() => {
-                        handleLogout();
-                        setIsOpen(false);
-                      }}
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      退出
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      className="w-full"
-                      onClick={() => {
-                        navigate("/auth/login");
-                        setIsOpen(false);
-                      }}
-                    >
-                      登录
-                    </Button>
-                    <Button 
-                      className="btn-primary w-full"
-                      onClick={() => {
-                        navigate("/auth/signup");
-                        setIsOpen(false);
-                      }}
-                    >
-                      注册
-                    </Button>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
+        <MobileMenu 
+          isOpen={isOpen} 
+          onClose={() => setIsOpen(false)}
+          onLogout={signOut}
+        />
       </div>
     </nav>
   );
