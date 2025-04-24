@@ -1,0 +1,99 @@
+
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { Menu, X, Search, Moon, Sun } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+    document.documentElement.classList.toggle("dark");
+  };
+
+  return (
+    <nav className="sticky top-0 z-50 w-full backdrop-blur-lg bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-700/50">
+      <div className="container mx-auto px-4 py-4">
+        <div className="flex items-center justify-between">
+          {/* Logo */}
+          <Link to="/" className="flex items-center space-x-2">
+            <div className="bg-gradient-primary rounded-lg w-8 h-8 flex items-center justify-center text-white font-bold">S</div>
+            <span className="text-xl font-bold gradient-text">ShumerPrompt</span>
+          </Link>
+
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <Link to="/explore" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
+              探索
+            </Link>
+            <Link to="/categories" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
+              分类
+            </Link>
+            <Link to="/submit" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
+              提交提示词
+            </Link>
+          </div>
+
+          {/* Right side actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            <Button variant="ghost" size="icon">
+              <Search className="h-5 w-5" />
+            </Button>
+            <Button variant="outline">登录</Button>
+            <Button className="btn-primary">注册</Button>
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="flex md:hidden items-center space-x-4">
+            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => setIsOpen(!isOpen)}>
+              {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+          </div>
+        </div>
+
+        {/* Mobile menu */}
+        {isOpen && (
+          <div className="md:hidden mt-4 py-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex flex-col space-y-4">
+              <Link 
+                to="/explore" 
+                className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                onClick={() => setIsOpen(false)}
+              >
+                探索
+              </Link>
+              <Link 
+                to="/categories" 
+                className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                onClick={() => setIsOpen(false)}
+              >
+                分类
+              </Link>
+              <Link 
+                to="/submit" 
+                className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+                onClick={() => setIsOpen(false)}
+              >
+                提交提示词
+              </Link>
+              <div className="flex space-x-2 px-4 pt-2">
+                <Button variant="outline" className="w-full">登录</Button>
+                <Button className="btn-primary w-full">注册</Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;
