@@ -18,21 +18,14 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
   const { data, isLoading } = useQuery({
     queryKey: ['prompts', userId, filter, page],
     queryFn: async () => {
-      let query = supabase
-        .from('prompts')
-        .select(`
-          *,
-          profiles!prompts_user_id_fkey (
-            username,
-            avatar_url
-          )
-        `)
-        .range((page - 1) * perPage, page * perPage - 1);
+      let prompts;
 
       if (filter === 'starred') {
-        query = supabase
+        // For starred prompts, we need a different approach
+        const { data: starredData, error: starredError } = await supabase
           .from('starred_prompts')
           .select(`
+            id,
             prompt_id,
             prompts (
               *,
@@ -44,34 +37,50 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
           `)
           .eq('user_id', userId)
           .range((page - 1) * perPage, page * perPage - 1);
-      } else {
-        query = query.eq('user_id', userId);
+
+        if (starredError) throw starredError;
         
+        prompts = starredData.map((item) => ({
+          ...item.prompts,
+          author: {
+            name: item.prompts.profiles?.username || 'Anonymous',
+            avatar: item.prompts.profiles?.avatar_url
+          }
+        }));
+      } else {
+        // For regular prompts filtering
+        let query = supabase
+          .from('prompts')
+          .select(`
+            *,
+            profiles!prompts_user_id_fkey (
+              username,
+              avatar_url
+            )
+          `)
+          .eq('user_id', userId);
+
         if (filter === 'public') {
           query = query.eq('is_public', true);
         } else if (filter === 'private') {
           query = query.eq('is_public', false);
         }
+
+        const { data: promptsData, error: promptsError } = await query
+          .range((page - 1) * perPage, page * perPage - 1);
+
+        if (promptsError) throw promptsError;
+
+        prompts = promptsData.map((prompt) => ({
+          ...prompt,
+          author: {
+            name: prompt.profiles?.username || 'Anonymous',
+            avatar: prompt.profiles?.avatar_url
+          }
+        }));
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      
-      return filter === 'starred' 
-        ? data.map((item: any) => ({
-            ...item.prompts,
-            author: {
-              name: item.prompts.profiles?.username || 'Anonymous',
-              avatar: item.prompts.profiles?.avatar_url
-            }
-          }))
-        : data.map((prompt: any) => ({
-            ...prompt,
-            author: {
-              name: prompt.profiles?.username || 'Anonymous',
-              avatar: prompt.profiles?.avatar_url
-            }
-          }));
+      return prompts;
     }
   });
 
