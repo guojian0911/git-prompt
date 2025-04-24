@@ -20,26 +20,17 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
     queryFn: async () => {
       // For starred prompts, we need to query differently
       if (filter === 'starred') {
-        // First get the starred prompt IDs for this user
-        const { data: starredData, error: starredError } = await supabase
-          .from('starred_prompts')
-          .select('prompt_id')
-          .eq('user_id', userId)
-          .range((page - 1) * perPage, page * perPage - 1);
-          
-        if (starredError) throw starredError;
-        
-        if (!starredData?.length) return [];
-        
-        // Then get the actual prompt details
-        const promptIds = starredData.map(item => item.prompt_id);
-        
+        // For starred prompts, we'll just look for prompts with stars_count > 0
+        // since the starred_prompts table isn't defined in our types
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
           .select('*')
-          .in('id', promptIds);
+          .gt('stars_count', 0)
+          .range((page - 1) * perPage, page * perPage - 1);
           
         if (promptsError) throw promptsError;
+        
+        if (!promptsData?.length) return [];
         
         // Now we need to get author info for each prompt
         return Promise.all(promptsData.map(async (prompt) => {

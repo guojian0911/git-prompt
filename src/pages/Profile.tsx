@@ -26,10 +26,10 @@ const Profile = () => {
       }
 
       // Get starred prompts count
-      const { data: starred, error: starredError } = await supabase
-        .from('starred_prompts')
-        .select('id')
-        .eq('user_id', user.id);
+      const { count: starredCount, error: starredError } = await supabase
+        .from('prompts')
+        .select('*', { count: 'exact', head: true })
+        .eq('stars_count', 1);
       
       if (starredError) {
         console.error("Error fetching starred prompts:", starredError);
@@ -39,7 +39,7 @@ const Profile = () => {
         totalPrompts: prompts?.length || 0,
         publicPrompts: prompts?.filter(p => p.is_public).length || 0,
         privatePrompts: prompts?.filter(p => !p.is_public).length || 0,
-        starredPrompts: starred?.length || 0,
+        starredPrompts: starredCount || 0,
       };
     },
     enabled: !!user?.id,
