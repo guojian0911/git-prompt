@@ -1,4 +1,3 @@
-
 # 项目数据库结构和交互流程
 
 ## 数据库表结构
@@ -25,13 +24,6 @@
 - `stars_count`: 星标数
 - `fork_count`: 复制次数
 - `share_count`: 分享次数
-
-#### `prompt_stars` 表
-存储用户对提示词的星标关系
-- `id`: UUID, 主键
-- `user_id`: 标星的用户ID
-- `prompt_id`: 被标星的提示词ID
-- `created_at`: 创建时间
 
 #### `shared_prompts` 表
 存储提示词的分享记录
@@ -194,4 +186,3 @@ const { data: profile } = await supabase
 3. 组件级状态: 管理UI相关的临时状态
 
 前端与数据库的交互主要通过 Supabase 客户端进行，使用 React Query 来优化数据获取和缓存策略，提高应用性能和用户体验。
-

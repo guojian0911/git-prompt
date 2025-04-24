@@ -1,4 +1,3 @@
-
 # Technical Architecture Document
 # Prompt Hub: AI Prompt Sharing Platform
 
@@ -72,21 +71,18 @@ The core database tables and their relationships:
 
 ```
 ┌────────────┐     ┌──────────────┐     ┌──────────────┐
-│  profiles  │     │    prompts   │     │ prompt_stars │
+│  profiles  │     │    prompts   │     │shared_prompts│
 ├────────────┤     ├──────────────┤     ├──────────────┤
 │ id         │◄────┤ user_id      │     │ id           │
 │ username   │     │ id           │◄────┤ prompt_id    │
-│ avatar_url │     │ title        │     │ user_id      │
-└────────────┘     │ description  │     └──────────────┘
-                   │ content      │
-                   │ category     │     ┌──────────────┐
-                   │ tags         │     │shared_prompts│
-                   │ is_public    │     ├──────────────┤
-                   │ fork_from    │     │ id           │
-                   │ stars_count  │     │ prompt_id    │
-                   │ fork_count   │     │ shared_by    │
-                   │ view_count   │     │ shared_with  │
-                   └──────────────┘     └──────────────┘
+│ avatar_url │     │ title        │     │ shared_by    │
+└────────────┘     │ description  │     │ shared_with  │
+                   │ content      │     └──────────────┘
+                   │ category     │
+                   │ tags         │
+                   │ is_public    │
+                   │ share_count  │
+                   └──────────────┘
 ```
 
 ## Data Flow
