@@ -11,22 +11,27 @@ const FeaturedPrompts = () => {
   const navigate = useNavigate();
   const { data: publicPrompts = [] } = usePublicPrompts();
 
-  // Update to match detail page fork logic
+  // 更新fork逻辑，确保数据正确传递
   const handleForkPrompt = (prompt: any) => {
-    navigate('/submit', { 
-      state: { 
+    // 将URL参数添加到导航中，以防state丢失
+    const url = `/submit?fork=${prompt.id}`;
+
+    navigate(url, {
+      state: {
         forkedPrompt: {
           title: `Copy of ${prompt.title}`,
           description: prompt.description,
           content: prompt.content,
           category: prompt.category,
           tags: prompt.tags || [],
-          forkedFrom: prompt.id
-        } 
-      } 
+          forkedFrom: prompt.id,
+          // 添加其他可能需要的字段
+          example_output: prompt.example_output || ""
+        }
+      }
     });
-    
-    // Add toast notification for user feedback using the imported toast function
+
+    // 添加toast通知
     toast.info("已创建提示词副本，您可以在此基础上修改后提交");
   };
 

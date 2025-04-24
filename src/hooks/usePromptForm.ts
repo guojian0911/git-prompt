@@ -8,19 +8,28 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 
-const promptFormSchema = z.object({
-  title: z.string().min(1, "标题不能为空").max(100, "标题不能超过100个字符"),
-  description: z.string().min(1, "描述不能为空").max(500, "描述不能超过500个字符"),
-  content: z.string().min(1, "提示词内容不能为空"),
-  category: z.string().min(1, "请选择分类"),
-  tags: z.string(),
-  example_output: z.string().optional(),
-  is_public: z.boolean().default(true),
-  terms: z.boolean().refine((val) => val === true, {
-    message: "您必须同意服务条款",
-  }),
-  forkedFrom: z.string().optional(),
-});
+// 创建一个可配置的表单验证schema生成函数
+const createPromptFormSchema = (isEditing = false) => {
+  return z.object({
+    title: z.string().min(1, "标题不能为空").max(100, "标题不能超过100个字符"),
+    description: z.string().min(1, "描述不能为空").max(500, "描述不能超过500个字符"),
+    content: z.string().min(1, "提示词内容不能为空"),
+    category: z.string().min(1, "请选择分类"),
+    tags: z.string(),
+    example_output: z.string().optional(),
+    is_public: z.boolean().default(true),
+    // 在编辑模式下放宽terms验证
+    terms: isEditing
+      ? z.boolean().optional().default(true)
+      : z.boolean().refine((val) => val === true, {
+          message: "您必须同意服务条款",
+        }),
+    forkedFrom: z.string().optional(),
+  });
+};
+
+// 默认使用非编辑模式的schema
+const promptFormSchema = createPromptFormSchema(false);
 
 export type PromptFormValues = z.infer<typeof promptFormSchema>;
 
@@ -32,8 +41,15 @@ export const usePromptForm = () => {
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
   const forkedPrompt = location.state?.forkedPrompt || {};
 
+  // 检查是否是编辑模式
+  const urlParams = new URLSearchParams(location.search);
+  const isEditMode = !!urlParams.get('edit');
+
+  // 根据是否是编辑模式选择不同的验证schema
+  const formSchema = createPromptFormSchema(isEditMode);
+
   const form = useForm<PromptFormValues>({
-    resolver: zodResolver(promptFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       title: "",
       description: "",
@@ -41,12 +57,14 @@ export const usePromptForm = () => {
       tags: "",
       content: "",
       example_output: "",
-      is_public: true,
-      terms: false,
+      is_public: false, // 默认为私有
+      terms: isEditMode ? true : false, // 编辑模式下默认同意条款
       forkedFrom: "",
     },
     mode: "onChange", // 添加实时验证模式
   });
+
+  // 移除调试日志，避免循环渲染
 
   const setEditMode = (promptId: string) => {
     setEditingPromptId(promptId);
@@ -60,7 +78,7 @@ export const usePromptForm = () => {
     }
 
     try {
-      console.log("提交的数据:", data); // 添加日志查看提交的数据
+      // 提交数据
 
       if (editingPromptId) {
         // 更新已有提示词
@@ -100,7 +118,7 @@ export const usePromptForm = () => {
 
         toast.success("提示词提交成功！");
       }
-      
+
       navigate("/profile");
     } catch (error: any) {
       console.error("Error submitting prompt:", error);

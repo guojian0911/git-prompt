@@ -10,7 +10,7 @@ const Footer = () => {
           <div className="md:col-span-1">
             <Link to="/" className="flex items-center space-x-2">
               <div className="bg-gradient-primary rounded-lg w-8 h-8 flex items-center justify-center text-white font-bold">S</div>
-              <span className="text-xl font-bold gradient-text">ShumerPrompt</span>
+              <span className="text-xl font-bold gradient-text">GitPrompt</span>
             </Link>
             <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
               发现、创建和分享高质量的 AI 提示词，提升您的 AI 使用效率。
@@ -49,7 +49,7 @@ const Footer = () => {
         
         <div className="border-t border-slate-200 dark:border-slate-800 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            © {new Date().getFullYear()} ShumerPrompt. 保留所有权利。
+            © {new Date().getFullYear()} GitPrompt. 保留所有权利。
           </p>
           <div className="flex mt-4 md:mt-0 space-x-6">
             <a href="#" className="text-slate-500 hover:text-shumer-purple">

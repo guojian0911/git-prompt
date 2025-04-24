@@ -4,13 +4,13 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { 
-  GitFork, 
-  Copy, 
-  MessageSquare, 
-  Star, 
+import {
+  GitFork,
+  Copy,
+  MessageSquare,
+  Star,
   StarOff,
-  ArrowLeft 
+  ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";
 import CommentList from "@/components/comments/CommentList";
@@ -110,21 +110,25 @@ const PromptDetail = () => {
 
   const handleFork = async () => {
     if (!prompt) return;
-    
+
+    // 将URL参数添加到导航中，以防state丢失
+    const url = `/submit?fork=${prompt.id}`;
+
     // Navigate to submit page with the prompt data
-    navigate("/submit", { 
-      state: { 
+    navigate(url, {
+      state: {
         forkedPrompt: {
           title: `Copy of ${prompt.title}`,
           description: prompt.description,
           content: prompt.content,
           category: prompt.category,
           tags: prompt.tags || [],
-          forkedFrom: prompt.id
+          forkedFrom: prompt.id,
+          example_output: prompt.example_output || ""
         }
-      } 
+      }
     });
-    
+
     // Increment fork count on the original prompt
     if (id) {
       try {
@@ -136,7 +140,7 @@ const PromptDetail = () => {
         console.error("Failed to update fork count:", error);
       }
     }
-    
+
     toast.info("已创建提示词副本，您可以在此基础上修改后提交");
   };
 
@@ -185,15 +189,15 @@ const PromptDetail = () => {
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
         <div className="mb-6">
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center text-sm text-slate-600 dark:text-slate-400 hover:text-shumer-purple transition-colors"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
             返回首页
           </Link>
         </div>
-        
+
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
           <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -228,7 +232,7 @@ const PromptDetail = () => {
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">
-                <button 
+                <button
                   onClick={handleToggleStar}
                   className="flex items-center text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
                 >
@@ -239,7 +243,7 @@ const PromptDetail = () => {
                   )}
                   <span>{starCount}</span>
                 </button>
-                <button 
+                <button
                   onClick={() => setShowComments(!showComments)}
                   className="flex items-center text-slate-700 dark:text-slate-300 hover:text-shumer-purple transition-colors"
                 >

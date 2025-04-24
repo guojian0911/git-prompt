@@ -18,7 +18,7 @@ const Index = () => {
         {/* How It Works Section */}
         <section className="py-16 container mx-auto px-4">
           <div className="mb-12 text-center">
-            <h2 className="text-3xl font-bold mb-4">如何使用ShumerPrompt</h2>
+            <h2 className="text-3xl font-bold mb-4">如何使用GitPrompt</h2>
             <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
               通过以下简单步骤，开始您的AI提示词之旅
             </p>

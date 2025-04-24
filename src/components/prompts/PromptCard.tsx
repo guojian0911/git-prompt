@@ -49,7 +49,7 @@ const PromptCard = ({
   const location = useLocation();
   const { user } = useAuth();
   const { isStarred, starCount, handleShare, handleCopy, handleToggleStar } = usePromptActions(stats.stars);
-  
+
   const isPersonalPage = location.pathname === '/profile';
   const isHomePage = location.pathname === '/';
   const isOwner = user?.id === user_id;
@@ -119,30 +119,30 @@ const PromptCard = ({
             {content}
           </pre>
           {content.length > 150 && (
-            <button 
-              onClick={() => setIsExpanded(!isExpanded)} 
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
               className="text-shumer-purple text-xs mt-2 hover:underline font-medium"
             >
               {isExpanded ? '收起' : '展开全部'}
             </button>
           )}
         </div>
-      </CardContent>
 
-      <CardFooter className="p-4 flex flex-col gap-4">
         {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-2 border-t pt-4">
+          <div className="flex flex-wrap gap-2 mt-4">
             {tags.map((tag) => (
-              <div 
+              <div
                 key={tag}
-                className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-full"
+                className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 px-2.5 py-1 rounded-full"
               >
                 {tag}
               </div>
             ))}
           </div>
         )}
+      </CardContent>
 
+      <CardFooter className="p-4 flex flex-col gap-4 border-t mt-2">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
             <img

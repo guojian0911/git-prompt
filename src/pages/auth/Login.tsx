@@ -59,7 +59,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="rounded-3xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#1d1d1d] text-gray-800 dark:text-white shadow-sm transition-all duration-300 hover:shadow-md hover:border-gray-300 dark:hover:border-white/20 w-full max-w-md mx-4">
         <div className="flex flex-col space-y-1.5 p-6">
-          <h3 className="font-semibold tracking-tight text-gray-800 dark:text-white text-2xl">Login to ShumerPrompt</h3>
+          <h3 className="font-semibold tracking-tight text-gray-800 dark:text-white text-2xl">Login to GitPrompt</h3>
           <p className="text-sm text-gray-600 dark:text-white/70">Sign in to access your account</p>
         </div>
         <div className="p-6 pt-0">
