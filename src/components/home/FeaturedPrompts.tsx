@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
 import PromptCard from "../prompts/PromptCard";
-import CategoryButton from "../ui/CategoryButton";
-import { supabase } from "@/integrations/supabase/client";
+import { usePublicPrompts } from "@/hooks/usePublicPrompts";
+import { FeaturedHeader } from "./FeaturedHeader";
+import { CategoriesSection } from "./CategoriesSection";
 
 // Static creative writing prompt as example
 const creativeWritingPrompt = {
@@ -27,90 +28,10 @@ const creativeWritingPrompt = {
   tags: []
 };
 
-// Mock data for categories (keep this for now)
-const categories = [
-  { name: "工作效率", icon: "📊", slug: "productivity", count: 124 },
-  { name: "创意写作", icon: "✍️", slug: "creative-writing", count: 98 },
-  { name: "编程开发", icon: "💻", slug: "programming", count: 156 },
-  { name: "教育学习", icon: "📚", slug: "education", count: 87 },
-  { name: "数据分析", icon: "📈", slug: "data-analysis", count: 65 },
-  { name: "生活助手", icon: "🏠", slug: "lifestyle", count: 112 }
-];
-
 const FeaturedPrompts = () => {
   const [activeTab, setActiveTab] = useState("featured");
   const navigate = useNavigate();
-
-  // Fetch public prompts - fixed query to work around relationship error
-  const { data: publicPrompts = [], isLoading } = useQuery({
-    queryKey: ['featured-prompts'],
-    queryFn: async () => {
-      try {
-        // First fetch the prompts
-        const { data: prompts, error } = await supabase
-          .from('prompts')
-          .select(`
-            id,
-            title, 
-            description, 
-            content,
-            category,
-            is_public,
-            user_id,
-            fork_from,
-            stars_count,
-            tags
-          `)
-          .eq('is_public', true)
-          .order('created_at', { ascending: false })
-          .limit(3);
-
-        if (error) {
-          console.error("Error fetching prompts:", error);
-          throw error;
-        }
-
-        // Then fetch profile information for each prompt's user_id
-        const promptsWithProfiles = await Promise.all(
-          prompts.map(async (prompt) => {
-            let username = 'Anonymous';
-            let avatar_url = null;
-
-            if (prompt.user_id) {
-              const { data: profile } = await supabase
-                .from('profiles')
-                .select('username, avatar_url')
-                .eq('id', prompt.user_id)
-                .single();
-
-              if (profile) {
-                username = profile.username || 'Anonymous';
-                avatar_url = profile.avatar_url;
-              }
-            }
-
-            return {
-              ...prompt,
-              author: {
-                name: username,
-                avatar: avatar_url
-              },
-              stats: {
-                rating: 0,
-                comments: 0,
-                stars: prompt.stars_count || 0
-              }
-            };
-          })
-        );
-
-        return promptsWithProfiles;
-      } catch (error) {
-        console.error("Error processing prompts:", error);
-        return [];
-      }
-    }
-  });
+  const { data: publicPrompts = [] } = usePublicPrompts();
 
   // Handler for forking a prompt
   const handleForkPrompt = (prompt: any) => {
@@ -134,48 +55,14 @@ const FeaturedPrompts = () => {
   return (
     <div className="py-16 bg-slate-50 dark:bg-slate-900/30">
       <div className="container mx-auto px-4">
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold mb-4">探索提示词</h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            发现社区创建的高质量提示词，提升您与AI的交互体验
-          </p>
-        </div>
-
-        {/* Tabs */}
-        <div className="flex justify-center mb-10">
-          <div className="flex space-x-2 p-1 bg-slate-200 dark:bg-slate-800 rounded-lg">
-            {["featured", "recent", "popular"].map((tab) => (
-              <button
-                key={tab}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === tab
-                    ? "bg-white dark:bg-slate-700 text-shumer-purple shadow-sm"
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                }`}
-                onClick={() => setActiveTab(tab)}
-              >
-                {tab === "featured" ? "精选" : tab === "recent" ? "最新" : "热门"}
-              </button>
-            ))}
-          </div>
-        </div>
+        <FeaturedHeader activeTab={activeTab} onTabChange={setActiveTab} />
 
         {/* Prompts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
           {allPrompts.map((prompt) => (
             <PromptCard
               key={prompt.id}
-              id={prompt.id}
-              title={prompt.title}
-              description={prompt.description}
-              content={prompt.content}
-              category={prompt.category}
-              is_public={prompt.is_public}
-              user_id={prompt.user_id}
-              fork_from={prompt.fork_from}
-              author={prompt.author}
-              stats={prompt.stats}
-              tags={prompt.tags}
+              {...prompt}
               onFork={() => handleForkPrompt(prompt)}
             />
           ))}
@@ -194,35 +81,7 @@ const FeaturedPrompts = () => {
           </Link>
         </div>
 
-        {/* Categories Section */}
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-bold mb-4">浏览分类</h2>
-          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            按照不同的类别浏览提示词，满足您的特定需求
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.map((category, index) => (
-            <CategoryButton 
-              key={index} 
-              {...category} 
-            />
-          ))}
-        </div>
-        
-        {/* View All Categories */}
-        <div className="text-center mt-8">
-          <Link
-            to="/categories"
-            className="text-shumer-purple hover:text-shumer-blue transition-colors inline-flex items-center"
-          >
-            查看全部分类
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
+        <CategoriesSection />
       </div>
     </div>
   );
