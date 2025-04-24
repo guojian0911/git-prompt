@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -17,77 +18,35 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
   const { data, isLoading } = useQuery({
     queryKey: ['prompts', userId, filter, page],
     queryFn: async () => {
-      let prompts = [];
+      let query = supabase.from('prompts').select('*').eq('user_id', userId);
 
-      if (filter === 'shared') {
-        const { data: sharedData, error: sharedError } = await supabase
-          .from('shared_prompts')
-          .select(`
-            id,
-            prompt_id,
-            shared_by,
-            prompts (*)
-          `)
-          .eq('shared_with', userId)
-          .range((page - 1) * perPage, page * perPage - 1);
-
-        if (sharedError) throw sharedError;
-        
-        const userIds = sharedData.map(item => item.shared_by).filter(Boolean);
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .in('id', userIds);
-
-        const profilesMap = {};
-        profilesData?.forEach(profile => {
-          profilesMap[profile.id] = profile;
-        });
-        
-        prompts = sharedData.map((item) => {
-          const promptData = item.prompts;
-          const userProfile = profilesMap[item.shared_by];
-          
-          return {
-            ...promptData,
-            author: {
-              name: userProfile?.username || 'Anonymous',
-              avatar: userProfile?.avatar_url
-            }
-          };
-        }).filter(item => item.id);
-      } else {
-        const { data: promptsData, error: promptsError } = await supabase
-          .from('prompts')
-          .select('*')
-          .eq('user_id', userId)
-          .range((page - 1) * perPage, page * perPage - 1);
-
-        if (promptsError) throw promptsError;
-        
-        let filteredPrompts = promptsData;
-        if (filter === 'public') {
-          filteredPrompts = promptsData.filter(p => p.is_public);
-        } else if (filter === 'private') {
-          filteredPrompts = promptsData.filter(p => !p.is_public);
-        }
-
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, username, avatar_url')
-          .eq('id', userId)
-          .single();
-
-        prompts = filteredPrompts.map((prompt) => ({
-          ...prompt,
-          author: {
-            name: profilesData?.username || 'Anonymous',
-            avatar: profilesData?.avatar_url
-          }
-        }));
+      switch (filter) {
+        case 'public':
+          query = query.eq('is_public', true);
+          break;
+        case 'private':
+          query = query.eq('is_public', false);
+          break;
       }
 
-      return prompts;
+      const { data: prompts, error } = await query
+        .range((page - 1) * perPage, page * perPage - 1);
+
+      if (error) throw error;
+
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('id, username, avatar_url')
+        .eq('id', userId)
+        .single();
+
+      return prompts?.map(prompt => ({
+        ...prompt,
+        author: {
+          name: profileData?.username || 'Anonymous',
+          avatar: profileData?.avatar_url
+        }
+      })) || [];
     }
   });
 
@@ -104,7 +63,7 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
   if (!data?.length) {
     return (
       <div className="text-center py-12">
-        <p className="text-muted-foreground">还没有{filter === 'starred' ? '收藏的' : ''}提示词</p>
+        <p className="text-muted-foreground">还没有提示词</p>
       </div>
     );
   }
@@ -115,17 +74,12 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
         {data.map((prompt) => (
           <PromptCard
             key={prompt.id}
-            id={prompt.id}
-            title={prompt.title}
-            description={prompt.description}
-            content={prompt.content}
-            category={prompt.category}
-            author={prompt.author}
+            {...prompt}
             stats={{
               rating: 0,
               comments: 0,
-              shares: prompt.share_count,
               stars: prompt.stars_count,
+              shares: prompt.share_count,
               forks: prompt.fork_count
             }}
           />

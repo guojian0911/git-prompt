@@ -1,3 +1,4 @@
+
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -37,7 +38,7 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12">
       <div className="container max-w-6xl mx-auto px-4">
-        {/* User Info Header */}
+        {/* 用户信息头部 */}
         <div className="mb-8 flex items-center gap-6">
           <img
             src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
@@ -50,7 +51,7 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Stats Cards */}
+        {/* 统计卡片 */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card className="p-6">
             <h3 className="font-semibold text-muted-foreground mb-2">提示词总数</h3>
@@ -70,13 +71,12 @@ const Profile = () => {
           </Card>
         </div>
 
-        {/* Prompts Tabs */}
+        {/* 提示词选项卡 */}
         <Tabs defaultValue="all" className="w-full">
           <TabsList>
             <TabsTrigger value="all">全部提示词</TabsTrigger>
             <TabsTrigger value="public">公开提示词</TabsTrigger>
             <TabsTrigger value="private">私有提示词</TabsTrigger>
-            <TabsTrigger value="shared">分享提示词</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
@@ -89,10 +89,6 @@ const Profile = () => {
 
           <TabsContent value="private" className="mt-6">
             <PromptList userId={user.id} filter="private" />
-          </TabsContent>
-
-          <TabsContent value="shared" className="mt-6">
-            <PromptList userId={user.id} filter="shared" />
           </TabsContent>
         </Tabs>
       </div>

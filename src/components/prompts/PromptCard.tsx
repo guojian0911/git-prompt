@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Copy, Star, MessageSquare, GitFork, Share } from "lucide-react";
@@ -11,9 +12,10 @@ interface PromptCardProps {
   description: string;
   content: string;
   category: string;
+  is_public: boolean;
   author: {
     name: string;
-    avatar: string;
+    avatar?: string;
   };
   stats: {
     rating: number;
@@ -30,6 +32,7 @@ const PromptCard = ({
   description,
   content,
   category,
+  is_public,
   author,
   stats
 }: PromptCardProps) => {
@@ -134,7 +137,7 @@ const PromptCard = ({
             <Copy className="w-4 h-4 mr-2" />
             复制
           </Button>
-          <SharePromptDialog promptId={id} promptTitle={title} />
+          {!is_public && <SharePromptDialog promptId={id} promptTitle={title} />}
           <Link to={`/prompt/${id}`}>
             <Button
               variant="outline"
