@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 
@@ -28,7 +29,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // 同步用户信息到 profiles 表的函数
   const syncUserProfile = async (user: User) => {
     try {
       // 检查是否已存在 profile
@@ -61,6 +61,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (insertError) {
           console.error('Error creating profile:', insertError);
+          toast.error('无法创建用户资料');
           return null;
         }
 
@@ -81,19 +82,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (updateError) {
         console.error('Error updating profile:', updateError);
+        toast.error('无法更新用户资料');
         return null;
       }
 
       return updatedProfile;
     } catch (error) {
       console.error('Sync profile error:', error);
+      toast.error('同步用户资料时发生错误');
       return null;
     }
   };
 
   // 确保会话状态保持同步
   useEffect(() => {
-    // 首先设置监听器
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log('Auth state changed:', event, newSession?.user?.id);
@@ -161,10 +163,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error signing out:', error);
+        toast.error('退出登录失败');
         throw error;
       }
       // 注销成功后会触发 onAuthStateChange 的 'SIGNED_OUT' 事件
       // 在那里会清除所有状态
+      toast.success('已成功退出登录');
     } catch (error) {
       console.error('Sign out error:', error);
       setIsLoading(false);
