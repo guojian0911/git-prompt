@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Star, MessageSquare, GitFork, Share } from "lucide-react";
+import { Copy, Star, MessageSquare, GitFork } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { SharePromptDialog } from "./SharePromptDialog";
@@ -62,45 +61,41 @@ const PromptCard = ({
   };
 
   return (
-    <div className="prompt-card animate-slide-up hover:scale-[1.02]">
-      <div className="flex justify-between items-start mb-4">
+    <div className="prompt-card animate-slide-up hover:scale-[1.02] transition-all duration-300">
+      <div className="flex justify-between items-start gap-4 mb-4">
         <Link
           to={`/category/${category.toLowerCase()}`}
-          className="px-3 py-1 text-xs font-medium rounded-full bg-shumer-light-purple text-shumer-purple hover:bg-shumer-purple hover:text-white transition-colors"
+          className="px-3 py-1.5 text-xs font-medium rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
         >
           {category}
         </Link>
-        <div className="flex items-center space-x-2 text-slate-500 dark:text-slate-400">
+        <div className="flex items-center gap-4 text-slate-500 dark:text-slate-400">
           <button 
             onClick={handleToggleStar}
-            className="flex items-center hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+            className="flex items-center gap-1.5 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
           >
             {isStarred ? (
-              <Star className="w-4 h-4 text-amber-400 mr-1 fill-amber-400" />
+              <Star className="w-4 h-4 text-amber-400 fill-amber-400" />
             ) : (
-              <Star className="w-4 h-4 mr-1" />
+              <Star className="w-4 h-4" />
             )}
-            <span className="text-sm">{starCount}</span>
+            <span className="text-sm font-medium">{starCount}</span>
           </button>
-          <Link to={`/prompt/${id}`} className="flex items-center">
-            <MessageSquare className="w-4 h-4 mr-1" />
-            <span className="text-sm">{stats.comments}</span>
+          <Link to={`/prompt/${id}`} className="flex items-center gap-1.5 hover:text-slate-700 dark:hover:text-slate-200">
+            <MessageSquare className="w-4 h-4" />
+            <span className="text-sm font-medium">{stats.comments}</span>
           </Link>
-          <div className="flex items-center">
-            <span className="text-sm">{stats.shares || 0}</span>
-          </div>
         </div>
       </div>
 
-      <Link to={`/prompt/${id}`}>
-        <h3 className="text-xl font-semibold mb-2 hover:text-shumer-purple transition-colors">
+      <Link to={`/prompt/${id}`} className="block mb-4">
+        <h3 className="text-xl font-semibold mb-2 text-slate-800 dark:text-slate-100 hover:text-shumer-purple transition-colors">
           {title}
         </h3>
+        <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2">
+          {description}
+        </p>
       </Link>
-
-      <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 line-clamp-2">
-        {description}
-      </p>
 
       <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 mb-4">
         <pre className={`text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
@@ -109,7 +104,7 @@ const PromptCard = ({
         {content.length > 150 && (
           <button 
             onClick={() => setIsExpanded(!isExpanded)} 
-            className="text-shumer-purple text-xs mt-2 hover:underline"
+            className="text-shumer-purple text-xs mt-2 hover:underline font-medium"
           >
             {isExpanded ? '收起' : '展开全部'}
           </button>
@@ -117,13 +112,13 @@ const PromptCard = ({
       </div>
 
       <div className="flex justify-between items-center">
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center gap-2">
           <img
             src={author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`}
             alt={author.name}
-            className="w-8 h-8 rounded-full"
+            className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-800"
           />
-          <span className="text-sm text-slate-600 dark:text-slate-400">
+          <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
             {author.name}
           </span>
         </div>
@@ -131,10 +126,10 @@ const PromptCard = ({
           <Button
             variant="outline"
             size="sm"
-            className="text-shumer-purple border-shumer-purple/30 hover:bg-shumer-purple/10"
+            className="text-shumer-purple border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={handleCopy}
           >
-            <Copy className="w-4 h-4 mr-2" />
+            <Copy className="w-4 h-4 mr-1.5" />
             复制
           </Button>
           {!is_public && <SharePromptDialog promptId={id} promptTitle={title} />}
@@ -142,9 +137,9 @@ const PromptCard = ({
             <Button
               variant="outline"
               size="sm"
-              className="text-shumer-purple border-shumer-purple/30 hover:bg-shumer-purple/10"
+              className="text-shumer-purple border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
             >
-              <GitFork className="w-4 h-4 mr-2" />
+              <GitFork className="w-4 h-4 mr-1.5" />
               Fork
             </Button>
           </Link>
