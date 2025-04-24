@@ -122,21 +122,6 @@ const { data: prompts } = useQuery({
 });
 ```
 
-#### 分享提示词
-1. 用户点击分享按钮，打开分享对话框
-2. 输入目标用户名称
-3. 前端通过 Supabase 客户端将分享记录插入 shared_prompts 表
-4. 同时更新原提示词的分享计数
-
-```typescript
-// 示例代码 - 分享提示词
-const { error } = await supabase.from('shared_prompts').insert({
-  prompt_id: promptId,
-  shared_by: user.id,
-  shared_with: targetUser.id
-});
-```
-
 ### 3. 用户个人资料操作流程
 
 1. 用户登录后，系统自动获取用户的个人资料信息
@@ -158,10 +143,10 @@ const { data: profile } = await supabase
 
 1. 每个用户只能访问、修改自己创建的提示词
 2. 公开的提示词可以被所有用户查看
-3. 私有提示词只能被创建者和被分享的用户访问
+3. 私有提示词只能被创建者访问
 4. 用户个人资料信息受到保护，只有自己能够修改
 
-这种设计确保了数据的安全性和隐私性，同时允许用户根据需要共享和协作。
+这种设计确保了数据的安全性和隐私性。
 
 ## 前端数据流
 

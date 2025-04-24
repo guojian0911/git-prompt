@@ -139,38 +139,6 @@ export type Database = {
           },
         ]
       }
-      shared_prompts: {
-        Row: {
-          created_at: string | null
-          id: string
-          prompt_id: string | null
-          shared_by: string | null
-          shared_with: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string
-          prompt_id?: string | null
-          shared_by?: string | null
-          shared_with?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string
-          prompt_id?: string | null
-          shared_by?: string | null
-          shared_with?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "shared_prompts_prompt_id_fkey"
-            columns: ["prompt_id"]
-            isOneToOne: false
-            referencedRelation: "prompts"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       starred_prompts: {
         Row: {
           created_at: string

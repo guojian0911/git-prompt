@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
@@ -24,7 +23,6 @@ const PromptDetail = () => {
   const [starCount, setStarCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
 
-  // Mock data - will be replaced with real data from backend
   const prompt = {
     id: id,
     title: "高效的产品需求文档生成提示词",
@@ -61,7 +59,6 @@ const PromptDetail = () => {
     tags: ["产品文档", "PRD", "需求分析"]
   };
 
-  // Mock comments
   const [comments, setComments] = useState([
     {
       id: "1",
@@ -91,7 +88,6 @@ const PromptDetail = () => {
   };
 
   const handleFork = () => {
-    // Navigate to submit page with prefilled data
     navigate("/submit", { 
       state: { 
         forkedFrom: prompt.id,
@@ -119,7 +115,6 @@ const PromptDetail = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto">
-        {/* Back link */}
         <div className="mb-6">
           <Link 
             to="/" 
@@ -130,7 +125,6 @@ const PromptDetail = () => {
           </Link>
         </div>
         
-        {/* Header Section */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
           <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -143,7 +137,6 @@ const PromptDetail = () => {
           </p>
         </div>
 
-        {/* Author Card */}
         <Card className="mb-8">
           <CardHeader>
             <div className="flex items-center gap-4">
@@ -162,7 +155,6 @@ const PromptDetail = () => {
           </CardHeader>
         </Card>
 
-        {/* Prompt Content Card */}
         <Card className="mb-8">
           <CardContent className="p-6">
             <div className="flex justify-between items-center mb-4">
@@ -217,7 +209,6 @@ const PromptDetail = () => {
           </CardContent>
         </Card>
 
-        {/* Comments section */}
         <Card>
           <CardHeader>
             <h3 className="text-xl font-semibold flex items-center">
