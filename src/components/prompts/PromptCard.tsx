@@ -1,7 +1,6 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { Copy, Star, MessageSquare, GitFork } from "lucide-react";
+import { Copy, Star, MessageSquare, GitFork, Share } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -18,8 +17,9 @@ interface PromptCardProps {
   stats: {
     rating: number;
     comments: number;
-    forks?: number;
     stars?: number;
+    forks?: number;
+    shares?: number;
   };
 }
 
@@ -82,6 +82,10 @@ const PromptCard = ({
             <MessageSquare className="w-4 h-4 mr-1" />
             <span className="text-sm">{stats.comments}</span>
           </Link>
+          <div className="flex items-center">
+            <Share className="w-4 h-4 mr-1" />
+            <span className="text-sm">{stats.shares || 0}</span>
+          </div>
           {stats.forks !== undefined && (
             <div className="flex items-center">
               <GitFork className="w-4 h-4 mr-1" />

@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Card } from "@/components/ui/card";
@@ -18,16 +17,16 @@ const Profile = () => {
         .select('id, is_public')
         .eq('user_id', user?.id);
 
-      const { data: stars } = await supabase
-        .from('starred_prompts')
+      const { data: shared } = await supabase
+        .from('shared_prompts')
         .select('id')
-        .eq('user_id', user?.id);
+        .eq('shared_with', user?.id);
 
       return {
         totalPrompts: prompts?.length || 0,
         publicPrompts: prompts?.filter(p => p.is_public).length || 0,
         privatePrompts: prompts?.filter(p => !p.is_public).length || 0,
-        starredPrompts: stars?.length || 0,
+        sharedPrompts: shared?.length || 0,
       };
     },
     enabled: !!user?.id,
@@ -66,8 +65,8 @@ const Profile = () => {
             <p className="text-3xl font-bold">{userStats?.privatePrompts || 0}</p>
           </Card>
           <Card className="p-6">
-            <h3 className="font-semibold text-muted-foreground mb-2">收藏提示词</h3>
-            <p className="text-3xl font-bold">{userStats?.starredPrompts || 0}</p>
+            <h3 className="font-semibold text-muted-foreground mb-2">分享提示词</h3>
+            <p className="text-3xl font-bold">{userStats?.sharedPrompts || 0}</p>
           </Card>
         </div>
 
@@ -77,7 +76,7 @@ const Profile = () => {
             <TabsTrigger value="all">全部提示词</TabsTrigger>
             <TabsTrigger value="public">公开提示词</TabsTrigger>
             <TabsTrigger value="private">私有提示词</TabsTrigger>
-            <TabsTrigger value="starred">收藏提示词</TabsTrigger>
+            <TabsTrigger value="shared">分享提示词</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-6">
@@ -92,8 +91,8 @@ const Profile = () => {
             <PromptList userId={user.id} filter="private" />
           </TabsContent>
 
-          <TabsContent value="starred" className="mt-6">
-            <PromptList userId={user.id} filter="starred" />
+          <TabsContent value="shared" className="mt-6">
+            <PromptList userId={user.id} filter="shared" />
           </TabsContent>
         </Tabs>
       </div>

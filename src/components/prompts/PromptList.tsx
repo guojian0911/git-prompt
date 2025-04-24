@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface PromptListProps {
   userId: string;
-  filter: 'all' | 'public' | 'private' | 'starred';
+  filter: 'all' | 'public' | 'private' | 'starred' | 'shared';
 }
 
 const PromptList = ({ userId, filter }: PromptListProps) => {
@@ -20,38 +19,34 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
     queryFn: async () => {
       let prompts = [];
 
-      if (filter === 'starred') {
-        // For starred prompts, we need a different approach
-        const { data: starredData, error: starredError } = await supabase
-          .from('starred_prompts')
+      if (filter === 'shared') {
+        const { data: sharedData, error: sharedError } = await supabase
+          .from('shared_prompts')
           .select(`
             id,
             prompt_id,
-            prompts (
-              *
-            )
+            shared_by,
+            prompts (*)
           `)
-          .eq('user_id', userId)
+          .eq('shared_with', userId)
           .range((page - 1) * perPage, page * perPage - 1);
 
-        if (starredError) throw starredError;
+        if (sharedError) throw sharedError;
         
-        // Get user profiles separately to avoid foreign key issues
-        const userIds = starredData.map(item => item.prompts?.user_id).filter(Boolean);
+        const userIds = sharedData.map(item => item.shared_by).filter(Boolean);
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
           .in('id', userIds);
 
-        // Create a map of user_id to profile data for quick lookup
         const profilesMap = {};
         profilesData?.forEach(profile => {
           profilesMap[profile.id] = profile;
         });
         
-        prompts = starredData.map((item) => {
+        prompts = sharedData.map((item) => {
           const promptData = item.prompts;
-          const userProfile = promptData?.user_id ? profilesMap[promptData.user_id] : null;
+          const userProfile = profilesMap[item.shared_by];
           
           return {
             ...promptData,
@@ -60,9 +55,8 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
               avatar: userProfile?.avatar_url
             }
           };
-        }).filter(item => item.id); // Filter out any undefined items
+        }).filter(item => item.id);
       } else {
-        // For regular prompts filtering
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
           .select('*')
@@ -71,7 +65,6 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
 
         if (promptsError) throw promptsError;
         
-        // Apply filter after fetching
         let filteredPrompts = promptsData;
         if (filter === 'public') {
           filteredPrompts = promptsData.filter(p => p.is_public);
@@ -79,7 +72,6 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
           filteredPrompts = promptsData.filter(p => !p.is_public);
         }
 
-        // Get user profiles separately
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, username, avatar_url')
@@ -132,6 +124,7 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
             stats={{
               rating: 0,
               comments: 0,
+              shares: prompt.share_count,
               stars: prompt.stars_count,
               forks: prompt.fork_count
             }}

@@ -114,6 +114,7 @@ export type Database = {
           fork_from: string | null
           id: string
           is_public: boolean
+          share_count: number
           stars_count: number
           tags: string[] | null
           title: string
@@ -131,6 +132,7 @@ export type Database = {
           fork_from?: string | null
           id?: string
           is_public?: boolean
+          share_count?: number
           stars_count?: number
           tags?: string[] | null
           title: string
@@ -148,6 +150,7 @@ export type Database = {
           fork_from?: string | null
           id?: string
           is_public?: boolean
+          share_count?: number
           stars_count?: number
           tags?: string[] | null
           title?: string
@@ -159,6 +162,38 @@ export type Database = {
           {
             foreignKeyName: "prompts_fork_from_fkey"
             columns: ["fork_from"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      shared_prompts: {
+        Row: {
+          created_at: string | null
+          id: string
+          prompt_id: string | null
+          shared_by: string | null
+          shared_with: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          prompt_id?: string | null
+          shared_by?: string | null
+          shared_with?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          prompt_id?: string | null
+          shared_by?: string | null
+          shared_with?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_prompts_prompt_id_fkey"
+            columns: ["prompt_id"]
             isOneToOne: false
             referencedRelation: "prompts"
             referencedColumns: ["id"]
