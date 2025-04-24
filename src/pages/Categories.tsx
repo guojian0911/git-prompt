@@ -24,11 +24,20 @@ const mockPrompts = [
     description: "帮助用户总结会议内容，提取关键点和行动项目",
     content: "我需要你充当会议总结助手...",
     category: "工作效率",
-    is_public: false,  // Add this property
+    is_public: false,
     author: { name: "张明", avatar: "" },
     stats: { rating: 4.9, comments: 23 }
   },
-  // ... add more mock prompts
+  {
+    id: "2",
+    title: "代码重构专家",
+    description: "帮助开发者重构和优化代码，提高代码质量和可维护性",
+    content: "请担任代码重构专家...",
+    category: "编程开发",
+    is_public: true,
+    author: { name: "李华", avatar: "" },
+    stats: { rating: 4.8, comments: 19 }
+  }
 ];
 
 const Categories = () => {
