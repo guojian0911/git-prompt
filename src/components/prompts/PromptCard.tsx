@@ -83,22 +83,34 @@ const PromptCard = ({
             isForkPrompt={isForkPrompt}
             isPersonalPage={isPersonalPage}
           />
-          <PromptActions
-            onCopy={handleCopyClick}
-            onShare={() => handleShare(id, user?.id)}
-            showShare={isPersonalPage && !is_public}
-            showEdit={isPersonalPage}
-            editState={isPersonalPage ? {
-              id,
-              title,
-              description,
-              content,
-              category,
-              tags: Array.isArray(tags) ? tags : [],
-              is_public,
-              forkedFrom: fork_from
-            } : undefined}
-          />
+          <div className="flex items-center gap-2">
+            {isHomePage && onFork && (
+              <Button 
+                onClick={handleForkClick}
+                variant="outline" 
+                size="sm" 
+                className="border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+              >
+                Fork 并修改此提示词
+              </Button>
+            )}
+            <PromptActions
+              onCopy={handleCopyClick}
+              onShare={() => handleShare(id, user?.id)}
+              showShare={isPersonalPage && !is_public}
+              showEdit={isPersonalPage}
+              editState={isPersonalPage ? {
+                id,
+                title,
+                description,
+                content,
+                category,
+                tags: Array.isArray(tags) ? tags : [],
+                is_public,
+                forkedFrom: fork_from
+              } : undefined}
+            />
+          </div>
         </div>
       </CardHeader>
 
@@ -125,19 +137,6 @@ const PromptCard = ({
             </button>
           )}
         </div>
-        
-        {isHomePage && onFork && (
-          <div className="mt-4">
-            <Button 
-              onClick={handleForkClick}
-              variant="outline" 
-              size="sm" 
-              className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
-            >
-              Fork 并修改此提示词
-            </Button>
-          </div>
-        )}
       </CardContent>
 
       <CardFooter className="p-4 flex flex-col gap-4">
