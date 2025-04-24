@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Search, Moon, Sun, LogIn, LogOut, User } from "lucide-react";
@@ -6,38 +5,39 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  // TODO: Replace with actual auth state
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark");
   };
 
-  const handleLogout = () => {
-    // TODO: Implement actual logout logic
-    setIsAuthenticated(false);
-    toast.success("Successfully logged out");
-    navigate("/");
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      toast.success("已成功退出登录");
+      navigate("/");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
   };
 
   return (
     <nav className="sticky top-0 z-50 w-full backdrop-blur-lg bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-700/50">
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
-          {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="bg-gradient-primary rounded-lg w-8 h-8 flex items-center justify-center text-white font-bold">G</div>
             <span className="text-xl font-bold gradient-text">GitPrompt</span>
           </Link>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
             <Link to="/explore" className="text-slate-700 dark:text-slate-200 hover:text-shumer-purple dark:hover:text-shumer-purple transition-colors">
               探索
@@ -50,7 +50,6 @@ const Navbar = () => {
             </Link>
           </div>
 
-          {/* Right side actions */}
           <div className="hidden md:flex items-center space-x-4">
             <Dialog>
               <DialogTrigger asChild>
@@ -78,7 +77,7 @@ const Navbar = () => {
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
             
-            {isAuthenticated ? (
+            {user ? (
               <>
                 <Button 
                   variant="ghost" 
@@ -116,7 +115,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile menu button */}
           <div className="flex md:hidden items-center space-x-4">
             <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
@@ -127,7 +125,6 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Mobile menu */}
         {isOpen && (
           <div className="md:hidden mt-4 py-4 border-t border-slate-200 dark:border-slate-700">
             <div className="flex flex-col space-y-4">
@@ -153,7 +150,7 @@ const Navbar = () => {
                 提交提示词
               </Link>
               <div className="flex flex-col space-y-2 px-4 pt-2">
-                {isAuthenticated ? (
+                {user ? (
                   <>
                     <Button 
                       variant="outline" 
