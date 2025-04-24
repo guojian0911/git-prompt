@@ -74,9 +74,9 @@ const PromptCard = ({
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+    <Card className="group bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-xl hover:shadow-lg transition-all duration-300">
       <CardHeader className="space-y-0 p-4">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between items-start gap-4">
           <PromptBadges
             category={category}
             isPrivate={!is_public}
@@ -106,7 +106,7 @@ const PromptCard = ({
 
       <CardContent className="p-4 pt-0">
         <Link to={`/prompt/${id}`} className="block">
-          <h3 className="text-xl font-semibold mb-2 text-slate-800 dark:text-slate-100 group-hover:text-shumer-purple transition-colors">
+          <h3 className="text-xl font-semibold mb-2 text-slate-800 dark:text-slate-100">
             {title}
           </h3>
           <p className="text-slate-600 dark:text-slate-300 text-sm line-clamp-2 mb-4">
@@ -114,7 +114,7 @@ const PromptCard = ({
           </p>
         </Link>
 
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100/50 dark:border-slate-800/50">
           <pre className={`text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
             {content}
           </pre>
@@ -133,7 +133,7 @@ const PromptCard = ({
             {tags.map((tag) => (
               <div
                 key={tag}
-                className="text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 px-2.5 py-1 rounded-full"
+                className="text-xs bg-purple-100/50 dark:bg-purple-900/30 text-purple-600 dark:text-purple-300 px-2.5 py-1 rounded-full"
               >
                 {tag}
               </div>
@@ -142,13 +142,13 @@ const PromptCard = ({
         )}
       </CardContent>
 
-      <CardFooter className="p-4 flex flex-col gap-4 border-t border-slate-100 dark:border-slate-800 mt-2">
+      <CardFooter className="p-4 flex flex-col gap-4 border-t border-slate-100/50 dark:border-slate-800/50 mt-2">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
             <img
               src={author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`}
               alt={author.name}
-              className="w-8 h-8 rounded-full ring-2 ring-white dark:ring-slate-800"
+              className="w-8 h-8 rounded-full ring-2 ring-white/50 dark:ring-slate-800/50"
             />
             <span className="text-sm font-medium text-slate-600 dark:text-slate-400">
               {author.name}
