@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export const UserMenu = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -15,9 +15,31 @@ export const UserMenu = () => {
       toast.success("已成功退出登录");
       navigate("/");
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || "退出登录失败");
     }
   };
+
+  // 如果正在加载认证状态，显示加载状态按钮
+  if (isLoading) {
+    return (
+      <>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          disabled
+        >
+          <span className="animate-pulse">...</span>
+        </Button>
+        <Button 
+          variant="outline" 
+          disabled
+          className="flex items-center gap-2"
+        >
+          <span className="animate-pulse">...</span>
+        </Button>
+      </>
+    );
+  }
 
   if (user) {
     return (

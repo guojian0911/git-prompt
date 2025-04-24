@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Form } from "@/components/ui/form";
@@ -45,6 +46,7 @@ export default function SubmitPrompt() {
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
   const forkedPrompt = location.state || {};
+  const [checkingAuth, setCheckingAuth] = useState(true);
   
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptFormSchema),
@@ -62,11 +64,14 @@ export default function SubmitPrompt() {
 
   // 检查用户是否登录
   useEffect(() => {
-    if (!isLoading && !user) {
-      toast.error("请先登录后再提交提示词");
-      navigate("/auth/login");
+    if (!isLoading) {
+      if (!user) {
+        toast.error("请先登录后再提交提示词");
+        navigate("/auth/login", { state: { returnUrl: location.pathname } });
+      }
+      setCheckingAuth(false);
     }
-  }, [user, isLoading, navigate]);
+  }, [user, isLoading, navigate, location.pathname]);
 
   // Handle fork data if available
   useEffect(() => {
@@ -89,7 +94,7 @@ export default function SubmitPrompt() {
   const onSubmit = async (data: PromptFormValues) => {
     if (!user) {
       toast.error("请先登录后再提交提示词");
-      navigate("/auth/login");
+      navigate("/auth/login", { state: { returnUrl: location.pathname } });
       return;
     }
 
@@ -102,15 +107,18 @@ export default function SubmitPrompt() {
     }
   };
 
-  // 如果正在加载认证状态，显示简单的加载提示
-  if (isLoading) {
+  // 如果正在加载认证状态或检查认证，显示简单的加载提示
+  if (isLoading || checkingAuth) {
     return (
       <div className="container py-12 flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-shumer-purple"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
         <span className="ml-3 text-lg">加载中...</span>
       </div>
     );
   }
+
+  // 如果没有用户，重定向已经在useEffect中处理
+  if (!user) return null;
 
   return (
     <div className="container py-12 max-w-4xl mx-auto px-4">

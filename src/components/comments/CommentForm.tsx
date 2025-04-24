@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 interface CommentFormProps {
   promptId: string;
@@ -14,15 +14,16 @@ interface CommentFormProps {
 const CommentForm = ({ promptId }: CommentFormProps) => {
   const [comment, setComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) {
       toast.error("请先登录后再发表评论");
-      navigate("/auth/login");
+      navigate("/auth/login", { state: { returnUrl: location.pathname } });
       return;
     }
     
@@ -47,30 +48,44 @@ const CommentForm = ({ promptId }: CommentFormProps) => {
     }
   };
 
+  // 显示合适的头像
+  const avatarUrl = user?.user_metadata?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user";
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col space-y-4">
       <div className="flex items-start gap-3">
         <Avatar className="h-8 w-8">
           <img 
-            src={user?.user_metadata?.avatar_url || "https://api.dicebear.com/7.x/avataaars/svg?seed=user"}
+            src={avatarUrl}
             alt="用户头像" 
           />
         </Avatar>
         <Textarea
           value={comment}
           onChange={(e) => setComment(e.target.value)}
-          placeholder="添加评论..."
+          placeholder={user ? "添加评论..." : "请登录后发表评论"}
           className="flex-1 resize-none"
+          disabled={isLoading || !user}
         />
       </div>
       <div className="flex justify-end">
-        <Button 
-          type="submit" 
-          disabled={!comment.trim() || isSubmitting}
-          size="sm"
-        >
-          {isSubmitting ? "发布中..." : "发布评论"}
-        </Button>
+        {!user && !isLoading ? (
+          <Button 
+            type="button" 
+            onClick={() => navigate("/auth/login", { state: { returnUrl: location.pathname } })}
+            size="sm"
+          >
+            登录以评论
+          </Button>
+        ) : (
+          <Button 
+            type="submit" 
+            disabled={!comment.trim() || isSubmitting || isLoading || !user}
+            size="sm"
+          >
+            {isSubmitting ? "发布中..." : "发布评论"}
+          </Button>
+        )}
       </div>
     </form>
   );

@@ -14,6 +14,14 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { signOut } = useAuth();
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("登出错误:", error);
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 w-full backdrop-blur-lg bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/50 dark:border-slate-700/50">
       <div className="container mx-auto px-4 py-4">
@@ -42,7 +50,7 @@ const Navbar = () => {
         <MobileMenu 
           isOpen={isOpen} 
           onClose={() => setIsOpen(false)}
-          onLogout={signOut}
+          onLogout={handleLogout}
         />
       </div>
     </nav>

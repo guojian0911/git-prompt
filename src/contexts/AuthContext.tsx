@@ -91,46 +91,86 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // 确保会话状态保持同步
   useEffect(() => {
+    // 首先设置监听器
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('Auth state changed:', event, session);
-        setSession(session);
-        setUser(session?.user ?? null);
+      async (event, newSession) => {
+        console.log('Auth state changed:', event, newSession?.user?.id);
         
-        if (session?.user) {
-          const userProfile = await syncUserProfile(session.user);
-          setProfile(userProfile);
-        } else {
+        if (event === 'SIGNED_OUT') {
+          // 处理登出事件
+          setUser(null);
+          setSession(null);
           setProfile(null);
+          setIsLoading(false);
+          return;
         }
-
-        setIsLoading(false);
+        
+        if (newSession?.user) {
+          setUser(newSession.user);
+          setSession(newSession);
+          
+          // 使用setTimeout避免潜在的死锁
+          setTimeout(async () => {
+            const userProfile = await syncUserProfile(newSession.user);
+            setProfile(userProfile);
+            setIsLoading(false);
+          }, 0);
+        } else {
+          setIsLoading(false);
+        }
       }
     );
 
-    // 检查初始会话
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session);
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        const userProfile = await syncUserProfile(session.user);
-        setProfile(userProfile);
+    // 然后检查初始会话
+    const checkSession = async () => {
+      try {
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setIsLoading(false);
+          return;
+        }
+        
+        if (initialSession?.user) {
+          setUser(initialSession.user);
+          setSession(initialSession);
+          
+          const userProfile = await syncUserProfile(initialSession.user);
+          setProfile(userProfile);
+        }
+      } catch (error) {
+        console.error('Session check error:', error);
+      } finally {
+        setIsLoading(false);
       }
+    };
+    
+    checkSession();
 
-      setIsLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error('Error signing out:', error);
+        throw error;
+      }
+      // 注销成功后会触发 onAuthStateChange 的 'SIGNED_OUT' 事件
+      // 在那里会清除所有状态
+    } catch (error) {
+      console.error('Sign out error:', error);
+      setIsLoading(false);
+    }
   };
 
-  // 无论是否加载完成或用户是否登录，都渲染子组件
   return (
     <AuthContext.Provider value={{ user, session, profile, signOut, isLoading }}>
       {children}
