@@ -1,10 +1,11 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Copy, Star, MessageSquare, GitFork } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { Copy, Edit, Star, MessageSquare, GitFork } from "lucide-react";
 import { toast } from "sonner";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PromptCardProps {
   id: string;
@@ -13,6 +14,7 @@ interface PromptCardProps {
   content: string;
   category: string;
   is_public: boolean;
+  user_id?: string;
   author: {
     name: string;
     avatar?: string;
@@ -35,11 +37,19 @@ const PromptCard = ({
   category,
   author,
   stats,
+  user_id,
   tags = []
 }: PromptCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isStarred, setIsStarred] = useState(false);
   const [starCount, setStarCount] = useState(stats.stars || 0);
+  const location = useLocation();
+  const { user } = useAuth();
+  
+  const isPersonalPage = location.pathname === '/profile';
+  const isOwner = user?.id === user_id;
+  const showForkButton = !isPersonalPage;
+  const showEditButton = isPersonalPage && isOwner;
 
   const handleCopy = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -79,12 +89,22 @@ const PromptCard = ({
             >
               <Copy className="w-4 h-4" />
             </button>
-            <Link
-              to={`/prompt/${id}`}
-              className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              <GitFork className="w-4 h-4" />
-            </Link>
+            {showEditButton && (
+              <Link
+                to={`/submit?edit=${id}`}
+                className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <Edit className="w-4 h-4" />
+              </Link>
+            )}
+            {showForkButton && (
+              <Link
+                to={`/prompt/${id}`}
+                className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                <GitFork className="w-4 h-4" />
+              </Link>
+            )}
           </div>
         </div>
       </CardHeader>
@@ -99,7 +119,7 @@ const PromptCard = ({
           </p>
         </Link>
 
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 mb-4">
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
           <pre className={`text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
             {content}
           </pre>
@@ -115,6 +135,20 @@ const PromptCard = ({
       </CardContent>
 
       <CardFooter className="p-4 flex flex-col gap-4">
+        {tags && tags.length > 0 && (
+          <div className="flex flex-wrap gap-2 border-t pt-4">
+            {tags.map((tag) => (
+              <Badge 
+                key={tag} 
+                variant="secondary"
+                className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
+
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
             <img
@@ -145,26 +179,14 @@ const PromptCard = ({
               <MessageSquare className="w-4 h-4" />
               <span className="text-sm">{stats.comments}</span>
             </Link>
-            <div className="flex items-center gap-1.5">
-              <GitFork className="w-4 h-4" />
-              <span className="text-sm">{stats.forks || 0}</span>
-            </div>
+            {showForkButton && (
+              <div className="flex items-center gap-1.5">
+                <GitFork className="w-4 h-4" />
+                <span className="text-sm">{stats.forks || 0}</span>
+              </div>
+            )}
           </div>
         </div>
-
-        {tags && tags.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {tags.map((tag) => (
-              <Badge 
-                key={tag} 
-                variant="secondary"
-                className="text-xs bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300"
-              >
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        )}
       </CardFooter>
     </Card>
   );
