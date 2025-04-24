@@ -1,69 +1,16 @@
 
-import { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { Form } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-
-const promptFormSchema = z.object({
-  title: z.string().min(1, "标题不能为空").max(100, "标题不能超过100个字符"),
-  description: z.string().min(1, "描述不能为空").max(500, "描述不能超过500个字符"),
-  content: z.string().min(1, "提示词内容不能为空"),
-  category: z.string().min(1, "请选择分类"),
-  tags: z.string(),
-  example_output: z.string().optional(),
-  is_public: z.boolean().default(true),
-  terms: z.boolean().refine((val) => val === true, {
-    message: "您必须同意服务条款",
-  }),
-  forkedFrom: z.string().optional(),
-});
-
-type PromptFormValues = z.infer<typeof promptFormSchema>;
-
-const categories = [
-  { value: "chatgpt", label: "ChatGPT" },
-  { value: "gpt-4", label: "GPT-4" },
-  { value: "writing", label: "写作" },
-  { value: "coding", label: "编程" },
-  { value: "business", label: "商业" },
-  { value: "education", label: "教育" },
-  { value: "marketing", label: "营销" },
-  { value: "creative", label: "创意" },
-  { value: "productivity", label: "生产力" },
-  { value: "research", label: "研究" },
-  { value: "product", label: "产品经理" },
-];
+import { PromptForm } from "@/components/prompts/PromptForm";
+import { usePromptForm } from "@/hooks/usePromptForm";
+import { toast } from "sonner";
 
 export default function SubmitPrompt() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  const forkedPrompt = location.state || {};
-  const [checkingAuth, setCheckingAuth] = useState(true);
-  
-  const form = useForm<PromptFormValues>({
-    resolver: zodResolver(promptFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      category: "",
-      tags: "",
-      content: "",
-      example_output: "",
-      is_public: true,
-      terms: false,
-      forkedFrom: "",
-    },
-  });
+  const { form, onSubmit, checkingAuth, setCheckingAuth, forkedPrompt } = usePromptForm();
 
   // 检查用户是否登录
   useEffect(() => {
@@ -74,7 +21,7 @@ export default function SubmitPrompt() {
       }
       setCheckingAuth(false);
     }
-  }, [user, isLoading, navigate, location.pathname]);
+  }, [user, isLoading, navigate, location.pathname, setCheckingAuth]);
 
   // 处理 fork 数据
   useEffect(() => {
@@ -92,35 +39,6 @@ export default function SubmitPrompt() {
       });
     }
   }, [forkedPrompt, form]);
-
-  const onSubmit = async (data: PromptFormValues) => {
-    if (!user) {
-      toast.error("请先登录后再提交提示词");
-      navigate("/auth/login", { state: { returnUrl: location.pathname } });
-      return;
-    }
-
-    try {
-      const { error: insertError } = await supabase.from("prompts").insert({
-        user_id: user.id,
-        title: data.title,
-        description: data.description,
-        content: data.content,
-        category: data.category,
-        tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
-        example_output: data.example_output || null,
-        is_public: data.is_public,
-      });
-
-      if (insertError) throw insertError;
-
-      toast.success("提示词提交成功！");
-      navigate("/");
-    } catch (error: any) {
-      console.error("Error submitting prompt:", error);
-      toast.error(error.message || "提交失败，请重试");
-    }
-  };
 
   // 如果正在加载认证状态或检查认证，显示加载提示
   if (isLoading || checkingAuth) {
@@ -147,111 +65,11 @@ export default function SubmitPrompt() {
       </div>
 
       <div className="bg-card rounded-lg border shadow-sm p-6">
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="title">标题</label>
-            <Input
-              id="title"
-              placeholder="例如：专家推理指南"
-              {...form.register("title")}
-            />
-            {form.formState.errors.title && (
-              <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="description">描述</label>
-            <Textarea
-              id="description"
-              placeholder="简要描述您的提示词的功能和它如何帮助用户"
-              {...form.register("description")}
-            />
-            {form.formState.errors.description && (
-              <p className="text-sm text-destructive">{form.formState.errors.description.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="category">分类</label>
-            <select
-              id="category"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              {...form.register("category")}
-            >
-              <option value="">选择分类</option>
-              {categories.map((category) => (
-                <option key={category.value} value={category.value}>
-                  {category.label}
-                </option>
-              ))}
-            </select>
-            {form.formState.errors.category && (
-              <p className="text-sm text-destructive">{form.formState.errors.category.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="tags">标签</label>
-            <Input
-              id="tags"
-              placeholder="用逗号分隔标签，例如：推理, 生产力, 编程"
-              {...form.register("tags")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="content">提示词内容</label>
-            <Textarea
-              id="content"
-              className="min-h-[200px] font-mono"
-              placeholder="在此粘贴您的提示词内容..."
-              {...form.register("content")}
-            />
-            {form.formState.errors.content && (
-              <p className="text-sm text-destructive">{form.formState.errors.content.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium" htmlFor="example_output">示例输出（可选）</label>
-            <Textarea
-              id="example_output"
-              className="min-h-[120px]"
-              placeholder="提供一个由您的提示词生成的输出示例"
-              {...form.register("example_output")}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="is_public"
-                {...form.register("is_public")}
-              />
-              <label htmlFor="is_public" className="text-sm font-medium">
-                公开分享
-              </label>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox id="terms" {...form.register("terms")} />
-              <label htmlFor="terms" className="text-sm">
-                我同意 <a href="/terms" className="text-primary hover:underline">服务条款</a> 和{" "}
-                <a href="/privacy" className="text-primary hover:underline">隐私政策</a>
-              </label>
-            </div>
-            {form.formState.errors.terms && (
-              <p className="text-sm text-destructive">{form.formState.errors.terms.message}</p>
-            )}
-          </div>
-
-          <Button type="submit" className="w-full">
-            {forkedPrompt.forkedFrom ? "提交修改后的提示词" : "提交提示词"}
-          </Button>
-        </form>
+        <PromptForm 
+          form={form} 
+          onSubmit={onSubmit} 
+          isForking={Boolean(forkedPrompt.forkedFrom)} 
+        />
       </div>
 
       <div className="mt-8 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800/30">
@@ -273,4 +91,4 @@ export default function SubmitPrompt() {
       </div>
     </div>
   );
-};
+}
