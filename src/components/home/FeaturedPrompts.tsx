@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -44,8 +45,16 @@ const FeaturedPrompts = () => {
       const { data: prompts, error } = await supabase
         .from('prompts')
         .select(`
-          *,
-          profiles:user_id (
+          id,
+          title, 
+          description, 
+          content,
+          category,
+          is_public,
+          user_id,
+          fork_from,
+          stars_count,
+          profiles (
             username,
             avatar_url
           )
@@ -61,6 +70,11 @@ const FeaturedPrompts = () => {
         author: {
           name: prompt.profiles?.username || 'Anonymous',
           avatar: prompt.profiles?.avatar_url
+        },
+        stats: {
+          rating: 0,
+          comments: 0,
+          stars: prompt.stars_count || 0
         }
       }));
     }
@@ -107,7 +121,7 @@ const FeaturedPrompts = () => {
               stats={{
                 rating: 0,
                 comments: 0,
-                stars: prompt.stars_count
+                stars: prompt.stats?.stars || 0
               }}
             />
           ))}
