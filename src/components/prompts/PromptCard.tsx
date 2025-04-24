@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Copy, Star, MessageSquare, GitFork, Share } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { SharePromptDialog } from "./SharePromptDialog";
 
 interface PromptCardProps {
   id: string;
@@ -83,15 +84,8 @@ const PromptCard = ({
             <span className="text-sm">{stats.comments}</span>
           </Link>
           <div className="flex items-center">
-            <Share className="w-4 h-4 mr-1" />
             <span className="text-sm">{stats.shares || 0}</span>
           </div>
-          {stats.forks !== undefined && (
-            <div className="flex items-center">
-              <GitFork className="w-4 h-4 mr-1" />
-              <span className="text-sm">{stats.forks}</span>
-            </div>
-          )}
         </div>
       </div>
 
@@ -122,7 +116,7 @@ const PromptCard = ({
       <div className="flex justify-between items-center">
         <div className="flex items-center space-x-2">
           <img
-            src={author.avatar || "https://api.dicebear.com/7.x/avataaars/svg?seed=" + author.name}
+            src={author.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${author.name}`}
             alt={author.name}
             className="w-8 h-8 rounded-full"
           />
@@ -140,6 +134,7 @@ const PromptCard = ({
             <Copy className="w-4 h-4 mr-2" />
             复制
           </Button>
+          <SharePromptDialog promptId={id} promptTitle={title} />
           <Link to={`/prompt/${id}`}>
             <Button
               variant="outline"
