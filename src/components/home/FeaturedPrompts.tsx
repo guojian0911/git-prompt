@@ -5,6 +5,7 @@ import PromptCard from "../prompts/PromptCard";
 import { usePublicPrompts } from "@/hooks/usePublicPrompts";
 import { FeaturedHeader } from "./FeaturedHeader";
 import { CategoriesSection } from "./CategoriesSection";
+import { toast } from "sonner";
 
 const FeaturedPrompts = () => {
   const navigate = useNavigate();
@@ -25,10 +26,8 @@ const FeaturedPrompts = () => {
       } 
     });
     
-    // Add toast notification for user feedback
-    if (window.Sonner) {
-      window.Sonner.toast.info("已创建提示词副本，您可以在此基础上修改后提交");
-    }
+    // Add toast notification for user feedback using the imported toast function
+    toast.info("已创建提示词副本，您可以在此基础上修改后提交");
   };
 
   return (
