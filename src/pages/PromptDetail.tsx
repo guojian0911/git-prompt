@@ -18,6 +18,7 @@ import CommentForm from "@/components/comments/CommentForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import PromptDerivationTree from "@/components/prompts/PromptDerivationTree";
 
 const PromptDetail = () => {
   const { id } = useParams();
@@ -187,112 +188,120 @@ const PromptDetail = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <Link
-            to="/"
-            className="inline-flex items-center text-sm text-slate-600 dark:text-slate-400 hover:text-shumer-purple transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            返回首页
-          </Link>
-        </div>
-
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            {prompt.tags.map((tag) => (
-              <Badge key={tag} variant="secondary">{tag}</Badge>
-            ))}
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="lg:w-2/3">
+          <div className="mb-6">
+            <Link
+              to="/"
+              className="inline-flex items-center text-sm text-slate-600 dark:text-slate-400 hover:text-shumer-purple transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-1" />
+              返回首页
+            </Link>
           </div>
-          <p className="text-slate-600 dark:text-slate-300 text-lg">
-            {prompt.description}
-          </p>
-        </div>
 
-        <Card className="mb-8">
-          <CardHeader>
-            <div className="flex items-center gap-4">
-              <img
-                src={prompt.author.avatar}
-                alt={prompt.author.name}
-                className="w-12 h-12 rounded-full"
-              />
-              <div>
-                <h3 className="font-medium">{prompt.author.name}</h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
-                  {prompt.author.bio}
-                </p>
-              </div>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold mb-4">{prompt.title}</h1>
+            <div className="flex flex-wrap items-center gap-4 mb-4">
+              {prompt.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">{tag}</Badge>
+              ))}
             </div>
-          </CardHeader>
-        </Card>
+            <p className="text-slate-600 dark:text-slate-300 text-lg">
+              {prompt.description}
+            </p>
+          </div>
 
-        <Card className="mb-8">
-          <CardContent className="p-6">
-            <div className="flex justify-between items-center mb-4">
+          <Card className="mb-8">
+            <CardHeader>
               <div className="flex items-center gap-4">
-                <button
-                  onClick={handleToggleStar}
-                  className="flex items-center text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
-                >
-                  {isStarred ? (
-                    <Star className="w-5 h-5 text-amber-400 mr-1 fill-amber-400" />
-                  ) : (
-                    <Star className="w-5 h-5 mr-1" />
-                  )}
-                  <span>{starCount}</span>
-                </button>
-                <button
-                  onClick={() => setShowComments(!showComments)}
-                  className="flex items-center text-slate-700 dark:text-slate-300 hover:text-shumer-purple transition-colors"
-                >
-                  <MessageSquare className="w-5 h-5 mr-1" />
-                  <span>{comments.length}</span>
-                </button>
-                <div className="flex items-center">
-                  <GitFork className="w-5 h-5 mr-1" />
-                  <span>{prompt.stats.forks}</span>
+                <img
+                  src={prompt.author.avatar}
+                  alt={prompt.author.name}
+                  className="w-12 h-12 rounded-full"
+                />
+                <div>
+                  <h3 className="font-medium">{prompt.author.name}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    {prompt.author.bio}
+                  </p>
                 </div>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  className="text-shumer-purple border-shumer-purple/30 hover:bg-shumer-purple/10"
-                  onClick={handleCopy}
-                >
-                  <Copy className="w-4 h-4 mr-2" />
-                  {copied ? "已复制" : "复制"}
-                </Button>
-                <Button
-                  variant="outline"
-                  className="text-shumer-purple border-shumer-purple/30 hover:bg-shumer-purple/10"
-                  onClick={handleFork}
-                >
-                  <GitFork className="w-4 h-4 mr-2" />
-                  Fork
-                </Button>
-              </div>
-            </div>
-            <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6">
-              <pre className="whitespace-pre-wrap text-slate-700 dark:text-slate-300 text-sm">
-                {prompt.content}
-              </pre>
-            </div>
-          </CardContent>
-        </Card>
+            </CardHeader>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <h3 className="text-xl font-semibold flex items-center">
-              <MessageSquare className="w-5 h-5 mr-2" /> 评论
-            </h3>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <CommentForm promptId={id || ""} />
-            <CommentList comments={comments} />
-          </CardContent>
-        </Card>
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleToggleStar}
+                    className="flex items-center text-slate-700 dark:text-slate-300 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
+                  >
+                    {isStarred ? (
+                      <Star className="w-5 h-5 text-amber-400 mr-1 fill-amber-400" />
+                    ) : (
+                      <Star className="w-5 h-5 mr-1" />
+                    )}
+                    <span>{starCount}</span>
+                  </button>
+                  <button
+                    onClick={() => setShowComments(!showComments)}
+                    className="flex items-center text-slate-700 dark:text-slate-300 hover:text-shumer-purple transition-colors"
+                  >
+                    <MessageSquare className="w-5 h-5 mr-1" />
+                    <span>{comments.length}</span>
+                  </button>
+                  <div className="flex items-center">
+                    <GitFork className="w-5 h-5 mr-1" />
+                    <span>{prompt.stats.forks}</span>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    className="text-shumer-purple border-shumer-purple/30 hover:bg-shumer-purple/10"
+                    onClick={handleCopy}
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    {copied ? "已复制" : "复制"}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="text-shumer-purple border-shumer-purple/30 hover:bg-shumer-purple/10"
+                    onClick={handleFork}
+                  >
+                    <GitFork className="w-4 h-4 mr-2" />
+                    Fork
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6">
+                <pre className="whitespace-pre-wrap text-slate-700 dark:text-slate-300 text-sm">
+                  {prompt.content}
+                </pre>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <h3 className="text-xl font-semibold flex items-center">
+                <MessageSquare className="w-5 h-5 mr-2" /> 评论
+              </h3>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <CommentForm promptId={id || ""} />
+              <CommentList comments={comments} />
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="lg:w-1/3">
+          <div className="sticky top-20">
+            <PromptDerivationTree promptId={id || ""} originalAuthorId={prompt.user_id} />
+          </div>
+        </div>
       </div>
     </div>
   );
