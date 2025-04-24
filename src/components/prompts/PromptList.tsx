@@ -18,7 +18,7 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
   const { data, isLoading } = useQuery({
     queryKey: ['prompts', userId, filter, page],
     queryFn: async () => {
-      let prompts;
+      let prompts = [];
 
       if (filter === 'starred') {
         // For starred prompts, we need a different approach
@@ -28,11 +28,7 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
             id,
             prompt_id,
             prompts (
-              *,
-              profiles!prompts_user_id_fkey (
-                username,
-                avatar_url
-              )
+              *
             )
           `)
           .eq('user_id', userId)
@@ -40,42 +36,61 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
 
         if (starredError) throw starredError;
         
-        prompts = starredData.map((item) => ({
-          ...item.prompts,
-          author: {
-            name: item.prompts.profiles?.username || 'Anonymous',
-            avatar: item.prompts.profiles?.avatar_url
-          }
-        }));
+        // Get user profiles separately to avoid foreign key issues
+        const userIds = starredData.map(item => item.prompts?.user_id).filter(Boolean);
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .in('id', userIds);
+
+        // Create a map of user_id to profile data for quick lookup
+        const profilesMap = {};
+        profilesData?.forEach(profile => {
+          profilesMap[profile.id] = profile;
+        });
+        
+        prompts = starredData.map((item) => {
+          const promptData = item.prompts;
+          const userProfile = promptData?.user_id ? profilesMap[promptData.user_id] : null;
+          
+          return {
+            ...promptData,
+            author: {
+              name: userProfile?.username || 'Anonymous',
+              avatar: userProfile?.avatar_url
+            }
+          };
+        }).filter(item => item.id); // Filter out any undefined items
       } else {
         // For regular prompts filtering
-        let query = supabase
+        const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
-          .select(`
-            *,
-            profiles!prompts_user_id_fkey (
-              username,
-              avatar_url
-            )
-          `)
-          .eq('user_id', userId);
-
-        if (filter === 'public') {
-          query = query.eq('is_public', true);
-        } else if (filter === 'private') {
-          query = query.eq('is_public', false);
-        }
-
-        const { data: promptsData, error: promptsError } = await query
+          .select('*')
+          .eq('user_id', userId)
           .range((page - 1) * perPage, page * perPage - 1);
 
         if (promptsError) throw promptsError;
+        
+        // Apply filter after fetching
+        let filteredPrompts = promptsData;
+        if (filter === 'public') {
+          filteredPrompts = promptsData.filter(p => p.is_public);
+        } else if (filter === 'private') {
+          filteredPrompts = promptsData.filter(p => !p.is_public);
+        }
 
-        prompts = promptsData.map((prompt) => ({
+        // Get user profiles separately
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, username, avatar_url')
+          .eq('id', userId)
+          .single();
+
+        prompts = filteredPrompts.map((prompt) => ({
           ...prompt,
           author: {
-            name: prompt.profiles?.username || 'Anonymous',
-            avatar: prompt.profiles?.avatar_url
+            name: profilesData?.username || 'Anonymous',
+            avatar: profilesData?.avatar_url
           }
         }));
       }
