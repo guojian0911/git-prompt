@@ -1,11 +1,12 @@
 
-import { Star, MessageSquare } from "lucide-react";
+import { Star, MessageSquare, GitFork } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface PromptStatsProps {
   promptId: string;
   starCount: number;
   commentCount: number;
+  forkCount?: number;
   isStarred: boolean;
   onStarClick: (e: React.MouseEvent) => void;
 }
@@ -14,6 +15,7 @@ export const PromptStats = ({
   promptId,
   starCount,
   commentCount,
+  forkCount = 0,
   isStarred,
   onStarClick
 }: PromptStatsProps) => {
@@ -37,6 +39,11 @@ export const PromptStats = ({
         <MessageSquare className="w-4 h-4" />
         <span className="text-sm">{commentCount}</span>
       </Link>
+      <div className="flex items-center gap-1.5">
+        <GitFork className="w-4 h-4" />
+        <span className="text-sm">{forkCount}</span>
+      </div>
     </div>
   );
 };
+

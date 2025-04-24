@@ -19,6 +19,7 @@ export const usePublicPrompts = () => {
             user_id,
             fork_from,
             stars_count,
+            fork_count,
             tags
           `)
           .eq('is_public', true)
@@ -58,7 +59,8 @@ export const usePublicPrompts = () => {
               stats: {
                 rating: 0,
                 comments: 0,
-                stars: prompt.stars_count || 0
+                stars: prompt.stars_count || 0,
+                forks: prompt.fork_count || 0
               }
             };
           })
@@ -72,3 +74,4 @@ export const usePublicPrompts = () => {
     }
   });
 };
+

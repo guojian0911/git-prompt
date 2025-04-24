@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -26,6 +25,7 @@ interface PromptCardProps {
     rating: number;
     comments: number;
     stars?: number;
+    forks?: number;
   };
   tags?: string[];
   onFork?: () => void;
@@ -83,34 +83,24 @@ const PromptCard = ({
             isForkPrompt={isForkPrompt}
             isPersonalPage={isPersonalPage}
           />
-          <div className="flex items-center gap-2">
-            {isHomePage && onFork && (
-              <Button 
-                onClick={handleForkClick}
-                variant="outline" 
-                size="sm" 
-                className="border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
-              >
-                Fork 并修改此提示词
-              </Button>
-            )}
-            <PromptActions
-              onCopy={handleCopyClick}
-              onShare={() => handleShare(id, user?.id)}
-              showShare={isPersonalPage && !is_public}
-              showEdit={isPersonalPage}
-              editState={isPersonalPage ? {
-                id,
-                title,
-                description,
-                content,
-                category,
-                tags: Array.isArray(tags) ? tags : [],
-                is_public,
-                forkedFrom: fork_from
-              } : undefined}
-            />
-          </div>
+          <PromptActions
+            onCopy={handleCopyClick}
+            onShare={() => handleShare(id, user?.id)}
+            onFork={isHomePage && onFork ? handleForkClick : undefined}
+            showShare={isPersonalPage && !is_public}
+            showEdit={isPersonalPage}
+            showFork={isHomePage && !!onFork}
+            editState={isPersonalPage ? {
+              id,
+              title,
+              description,
+              content,
+              category,
+              tags: Array.isArray(tags) ? tags : [],
+              is_public,
+              forkedFrom: fork_from
+            } : undefined}
+          />
         </div>
       </CardHeader>
 
@@ -168,6 +158,7 @@ const PromptCard = ({
             promptId={id}
             starCount={starCount}
             commentCount={stats.comments}
+            forkCount={stats.forks}
             isStarred={isStarred}
             onStarClick={handleStarClick}
           />

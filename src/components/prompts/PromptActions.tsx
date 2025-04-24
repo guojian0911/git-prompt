@@ -1,12 +1,14 @@
 
-import { Copy, Edit, Share2 } from "lucide-react";
+import { Copy, Edit, Share2, GitFork } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface PromptActionsProps {
   onCopy: (e: React.MouseEvent) => void;
   onShare?: () => void;
+  onFork?: (e: React.MouseEvent) => void;
   showShare?: boolean;
   showEdit?: boolean;
+  showFork?: boolean;
   editState?: {
     id: string;
     title: string;
@@ -22,8 +24,10 @@ interface PromptActionsProps {
 export const PromptActions = ({
   onCopy,
   onShare,
+  onFork,
   showShare,
   showEdit,
+  showFork,
   editState
 }: PromptActionsProps) => {
   return (
@@ -34,6 +38,15 @@ export const PromptActions = ({
       >
         <Copy className="w-4 h-4" />
       </button>
+      
+      {showFork && onFork && (
+        <button
+          onClick={onFork}
+          className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+        >
+          <GitFork className="w-4 h-4" />
+        </button>
+      )}
       
       {showShare && (
         <button
@@ -56,3 +69,4 @@ export const PromptActions = ({
     </div>
   );
 };
+
