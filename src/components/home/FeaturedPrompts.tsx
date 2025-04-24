@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import PromptCard from "../prompts/PromptCard";
 import CategoryButton from "../ui/CategoryButton";
@@ -37,11 +37,13 @@ const categories = [
 
 const FeaturedPrompts = () => {
   const [activeTab, setActiveTab] = useState("featured");
+  const navigate = useNavigate();
 
   // Fetch public prompts
   const { data: publicPrompts = [], isLoading } = useQuery({
     queryKey: ['featured-prompts'],
     queryFn: async () => {
+      // Fix: Adjust the query to properly join with profiles table
       const { data: prompts, error } = await supabase
         .from('prompts')
         .select(`
@@ -54,16 +56,16 @@ const FeaturedPrompts = () => {
           user_id,
           fork_from,
           stars_count,
-          profiles (
-            username,
-            avatar_url
-          )
+          profiles:user_id(username, avatar_url)
         `)
         .eq('is_public', true)
         .order('created_at', { ascending: false })
         .limit(3);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching prompts:", error);
+        throw error;
+      }
 
       return prompts.map(prompt => ({
         ...prompt,
@@ -79,6 +81,22 @@ const FeaturedPrompts = () => {
       }));
     }
   });
+
+  // Handler for forking a prompt
+  const handleForkPrompt = (prompt) => {
+    navigate('/submit', { 
+      state: { 
+        forkedPrompt: {
+          title: prompt.title,
+          description: prompt.description,
+          content: prompt.content,
+          category: prompt.category,
+          tags: prompt.tags || [],
+          forkedFrom: prompt.id
+        } 
+      } 
+    });
+  };
 
   // Combine static prompt with fetched prompts
   const allPrompts = [creativeWritingPrompt, ...publicPrompts];
@@ -123,6 +141,8 @@ const FeaturedPrompts = () => {
                 comments: 0,
                 stars: prompt.stats?.stars || 0
               }}
+              fork_from={prompt.fork_from}
+              onFork={() => handleForkPrompt(prompt)}
             />
           ))}
         </div>

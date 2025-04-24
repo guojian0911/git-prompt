@@ -7,6 +7,7 @@ import { usePromptActions } from "@/hooks/usePromptActions";
 import { PromptBadges } from "./PromptBadges";
 import { PromptActions } from "./PromptActions";
 import { PromptStats } from "./PromptStats";
+import { Button } from "@/components/ui/button";
 
 interface PromptCardProps {
   id: string;
@@ -27,6 +28,7 @@ interface PromptCardProps {
     stars?: number;
   };
   tags?: string[];
+  onFork?: () => void;
 }
 
 const PromptCard = ({
@@ -40,7 +42,8 @@ const PromptCard = ({
   stats,
   user_id,
   fork_from,
-  tags = []
+  tags = [],
+  onFork
 }: PromptCardProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const location = useLocation();
@@ -48,6 +51,7 @@ const PromptCard = ({
   const { isStarred, starCount, handleShare, handleCopy, handleToggleStar } = usePromptActions(stats.stars);
   
   const isPersonalPage = location.pathname === '/profile';
+  const isHomePage = location.pathname === '/';
   const isOwner = user?.id === user_id;
   const isForkPrompt = !!fork_from;
 
@@ -61,6 +65,12 @@ const PromptCard = ({
     e.preventDefault();
     e.stopPropagation();
     handleToggleStar();
+  };
+
+  const handleForkClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (onFork) onFork();
   };
 
   return (
@@ -115,6 +125,19 @@ const PromptCard = ({
             </button>
           )}
         </div>
+        
+        {isHomePage && onFork && (
+          <div className="mt-4">
+            <Button 
+              onClick={handleForkClick}
+              variant="outline" 
+              size="sm" 
+              className="w-full border-purple-300 text-purple-700 hover:bg-purple-50 hover:text-purple-800"
+            >
+              Fork 并修改此提示词
+            </Button>
+          </div>
+        )}
       </CardContent>
 
       <CardFooter className="p-4 flex flex-col gap-4">
