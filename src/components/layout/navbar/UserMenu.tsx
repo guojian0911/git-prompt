@@ -1,40 +1,21 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { UserDropdownMenu } from "./UserDropdownMenu";
 
 export const UserMenu = () => {
   const navigate = useNavigate();
-  const { user, signOut, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      toast.success("已成功退出登录");
-      navigate("/");
-    } catch (error: any) {
-      toast.error(error.message || "退出登录失败");
-    }
-  };
-
-  // 如果正在加载认证状态，显示加载状态按钮
   if (isLoading) {
     return (
       <>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          disabled
-        >
+        <Button variant="ghost" size="icon" disabled>
           <span className="animate-pulse">...</span>
         </Button>
-        <Button 
-          variant="outline" 
-          disabled
-          className="flex items-center gap-2"
-        >
+        <Button variant="outline" disabled className="flex items-center gap-2">
           <span className="animate-pulse">...</span>
         </Button>
       </>
@@ -42,25 +23,7 @@ export const UserMenu = () => {
   }
 
   if (user) {
-    return (
-      <>
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => navigate("/profile")}
-        >
-          <User className="h-5 w-5" />
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={handleLogout}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          退出
-        </Button>
-      </>
-    );
+    return <UserDropdownMenu />;
   }
 
   return (

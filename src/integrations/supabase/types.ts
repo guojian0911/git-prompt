@@ -111,6 +111,7 @@ export type Database = {
           description: string
           example_output: string | null
           fork_count: number
+          fork_from: string | null
           id: string
           is_public: boolean
           stars_count: number
@@ -127,6 +128,7 @@ export type Database = {
           description: string
           example_output?: string | null
           fork_count?: number
+          fork_from?: string | null
           id?: string
           is_public?: boolean
           stars_count?: number
@@ -143,6 +145,7 @@ export type Database = {
           description?: string
           example_output?: string | null
           fork_count?: number
+          fork_from?: string | null
           id?: string
           is_public?: boolean
           stars_count?: number
@@ -152,7 +155,44 @@ export type Database = {
           user_id?: string
           view_count?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "prompts_fork_from_fkey"
+            columns: ["fork_from"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      starred_prompts: {
+        Row: {
+          created_at: string
+          id: string
+          prompt_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          prompt_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          prompt_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "starred_prompts_prompt_id_fkey"
+            columns: ["prompt_id"]
+            isOneToOne: false
+            referencedRelation: "prompts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tutorials: {
         Row: {
