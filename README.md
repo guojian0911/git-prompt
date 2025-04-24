@@ -1,26 +1,41 @@
-# Welcome to your Lovable project
 
-## Project info
+# Prompt Hub - AI Prompt Sharing Platform
+
+## Project Overview
+
+Prompt Hub is a collaborative platform for creating, sharing, and discovering high-quality AI prompts. The application allows users to build a personal collection of effective prompts, share them with the community, and discover prompts created by others.
 
 **URL**: https://lovable.dev/projects/fc5b528f-b2c0-45b2-bf2d-45148494d746
 
-## How can I edit this code?
+## Core Features
 
-There are several ways of editing your application.
+- **Prompt Creation & Management**: Create, edit, and organize your AI prompts
+- **Community Sharing**: Share prompts with the community and discover prompts from other users
+- **Categories & Tags**: Browse prompts by categories and tags to find exactly what you need
+- **Interactive Features**: Star, fork, and comment on prompts
+- **User Profiles**: Personalized user profiles with activity tracking
 
-**Use Lovable**
+## Tech Stack
+
+This project is built with:
+
+- **Frontend**: React, TypeScript, Tailwind CSS, shadcn/ui
+- **Build Tool**: Vite
+- **Backend**: Supabase (Authentication, Database, Storage)
+- **State Management**: TanStack Query
+- **Routing**: React Router
+
+## Getting Started
+
+### Using Lovable
 
 Simply visit the [Lovable Project](https://lovable.dev/projects/fc5b528f-b2c0-45b2-bf2d-45148494d746) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
-**Use your preferred IDE**
+### Local Development
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+If you want to work locally using your own IDE, you can clone this repo and push changes:
 
 ```sh
 # Step 1: Clone the repository using the project's Git URL.
@@ -36,13 +51,13 @@ npm i
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+### Editing in GitHub
 
 - Navigate to the desired file(s).
 - Click the "Edit" button (pencil icon) at the top right of the file view.
 - Make your changes and commit the changes.
 
-**Use GitHub Codespaces**
+### Using GitHub Codespaces
 
 - Navigate to the main page of your repository.
 - Click on the "Code" button (green button) near the top right.
@@ -50,24 +65,34 @@ npm run dev
 - Click on "New codespace" to launch a new Codespace environment.
 - Edit files directly within the Codespace and commit and push your changes once you're done.
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
+## Deployment
 
 Simply open [Lovable](https://lovable.dev/projects/fc5b528f-b2c0-45b2-bf2d-45148494d746) and click on Share -> Publish.
 
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
+## Custom Domain Setup
 
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Database Schema
+
+The project uses a Supabase database with the following key tables:
+
+- `prompts`: Stores all user-created prompts
+- `profiles`: Contains user profile information
+- `prompt_stars`: Tracks which users have starred which prompts
+- `shared_prompts`: Records of which prompts have been shared with specific users
+- `tutorials`: Educational content related to prompt engineering
+
+For a detailed overview of the database structure, see [Database Structure](./src/docs/database-structure.md)
+
+## Contributing
+
+We welcome contributions from the community! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
