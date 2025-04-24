@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card";
@@ -6,7 +7,6 @@ import { usePromptActions } from "@/hooks/usePromptActions";
 import { PromptBadges } from "./PromptBadges";
 import { PromptActions } from "./PromptActions";
 import { PromptStats } from "./PromptStats";
-import { Button } from "@/components/ui/button";
 
 interface PromptCardProps {
   id: string;
@@ -74,7 +74,7 @@ const PromptCard = ({
   };
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300">
+    <Card className="group hover:shadow-lg transition-all duration-300 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
       <CardHeader className="space-y-0 p-4">
         <div className="flex justify-between items-start">
           <PromptBadges
@@ -86,10 +86,10 @@ const PromptCard = ({
           <PromptActions
             onCopy={handleCopyClick}
             onShare={() => handleShare(id, user?.id)}
-            onFork={isHomePage && onFork ? handleForkClick : undefined}
+            onFork={isHomePage || location.pathname === '/categories' ? handleForkClick : undefined}
             showShare={isPersonalPage && !is_public}
             showEdit={isPersonalPage}
-            showFork={isHomePage && !!onFork}
+            showFork={isHomePage || location.pathname === '/categories'}
             editState={isPersonalPage ? {
               id,
               title,
@@ -114,7 +114,7 @@ const PromptCard = ({
           </p>
         </Link>
 
-        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3">
+        <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-3 border border-slate-100 dark:border-slate-800">
           <pre className={`text-slate-700 dark:text-slate-300 text-sm whitespace-pre-wrap ${isExpanded ? '' : 'line-clamp-3'}`}>
             {content}
           </pre>
@@ -142,7 +142,7 @@ const PromptCard = ({
         )}
       </CardContent>
 
-      <CardFooter className="p-4 flex flex-col gap-4 border-t mt-2">
+      <CardFooter className="p-4 flex flex-col gap-4 border-t border-slate-100 dark:border-slate-800 mt-2">
         <div className="flex justify-between items-center w-full">
           <div className="flex items-center gap-2">
             <img
