@@ -44,6 +44,7 @@ export const usePromptForm = () => {
       terms: false,
       forkedFrom: "",
     },
+    mode: "onChange", // 添加实时验证模式
   });
 
   const onSubmit = async (data: PromptFormValues) => {
@@ -54,6 +55,8 @@ export const usePromptForm = () => {
     }
 
     try {
+      console.log("提交的数据:", data); // 添加日志查看提交的数据
+
       const { error: insertError } = await supabase.from("prompts").insert({
         user_id: user.id,
         title: data.title,

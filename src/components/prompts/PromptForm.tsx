@@ -102,7 +102,10 @@ export const PromptForm = ({
           <div className="flex items-center space-x-2">
             <Checkbox
               id="is_public"
-              {...form.register("is_public")}
+              checked={form.watch("is_public")}
+              onCheckedChange={(checked) => {
+                form.setValue("is_public", checked === true, { shouldValidate: true });
+              }}
             />
             <label htmlFor="is_public" className="text-sm font-medium">
               公开分享
@@ -112,7 +115,13 @@ export const PromptForm = ({
 
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
-            <Checkbox id="terms" {...form.register("terms")} />
+            <Checkbox 
+              id="terms" 
+              checked={form.watch("terms")}
+              onCheckedChange={(checked) => {
+                form.setValue("terms", checked === true, { shouldValidate: true });
+              }}
+            />
             <label htmlFor="terms" className="text-sm">
               我同意 <a href="/terms" className="text-primary hover:underline">服务条款</a> 和{" "}
               <a href="/privacy" className="text-primary hover:underline">隐私政策</a>
@@ -123,7 +132,11 @@ export const PromptForm = ({
           )}
         </div>
 
-        <Button type="submit" className="w-full">
+        <Button 
+          type="submit" 
+          className="w-full"
+          disabled={!form.formState.isValid}
+        >
           {isForking ? "提交修改后的提示词" : "提交提示词"}
         </Button>
       </form>
