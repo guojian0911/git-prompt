@@ -14,6 +14,7 @@ import Categories from "@/pages/Categories";
 import Login from "@/pages/auth/Login";
 import SignUp from "@/pages/auth/SignUp";
 import Profile from "@/pages/Profile";
+import AccountSettings from "@/pages/AccountSettings";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,7 +36,7 @@ const App = () => (
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<SignUp />} />
             <Route path="/profile" element={<Profile />} />
-            <Route path="/account" element={<Profile />} />
+            <Route path="/account" element={<AccountSettings />} />
             <Route path="/starred" element={<Index />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

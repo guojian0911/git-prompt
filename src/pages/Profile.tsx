@@ -1,126 +1,108 @@
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { toast } from "sonner";
+import React from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
-  const { user, profile, isLoading } = useAuth();
-  const [formData, setFormData] = useState({
-    username: "",
-    email: "",
-    avatar: "",
+  const { user, profile } = useAuth();
+
+  const { data: userStats } = useQuery({
+    queryKey: ['userStats', user?.id],
+    queryFn: async () => {
+      const { data: prompts, error } = await supabase
+        .from('prompts')
+        .select('id, is_public')
+        .eq('user_id', user?.id);
+
+      const { data: stars } = await supabase
+        .from('starred_prompts')
+        .select('id')
+        .eq('user_id', user?.id);
+
+      return {
+        totalPrompts: prompts?.length || 0,
+        publicPrompts: prompts?.filter(p => p.is_public).length || 0,
+        privatePrompts: prompts?.filter(p => !p.is_public).length || 0,
+        starredPrompts: stars?.length || 0,
+      };
+    },
+    enabled: !!user?.id,
   });
 
-  useEffect(() => {
-    if (profile) {
-      setFormData({
-        username: profile.username || "",
-        email: user?.email || "",
-        avatar: profile.avatar_url || "",
-      });
-    }
-  }, [profile, user]);
-
-  const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          username: formData.username,
-          avatar_url: formData.avatar,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', user?.id);
-
-      if (error) throw error;
-      toast.success("个人资料更新成功！");
-    } catch (error: any) {
-      console.error('Error updating profile:', error);
-      toast.error(error.message || "更新个人资料失败");
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12 flex items-center justify-center">
-        <div className="text-center">加载中...</div>
-      </div>
-    );
-  }
+  if (!user) return null;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-12">
-      <div className="container max-w-4xl mx-auto px-4">
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8">
-          <div className="flex flex-col items-center mb-8">
-            <Avatar className="w-24 h-24 mb-4">
-              <AvatarImage src={formData.avatar} />
-              <AvatarFallback>
-                {formData.username ? formData.username.slice(0, 2).toUpperCase() : "??"}
-              </AvatarFallback>
-            </Avatar>
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">个人中心</h1>
-          </div>
-
-          <form onSubmit={handleUpdateProfile} className="space-y-6 max-w-md mx-auto">
-            <div className="space-y-2">
-              <Label htmlFor="username">用户名</Label>
-              <Input
-                id="username"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">邮箱</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                disabled
-                className="bg-gray-100"
-              />
-              <p className="text-sm text-gray-500">邮箱地址不可更改</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="avatar">头像 URL</Label>
-              <Input
-                id="avatar"
-                type="url"
-                value={formData.avatar}
-                onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                placeholder="https://example.com/avatar.jpg"
-              />
-            </div>
-
-            <Button type="submit" className="w-full">
-              更新个人资料
-            </Button>
-          </form>
-        </div>
-
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-lg p-8 mt-8">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">账号信息</h2>
-            <div className="space-y-2">
-              <p className="text-gray-600 dark:text-gray-400">
-                登录方式：{user?.app_metadata?.provider || '邮箱'}
-              </p>
-              <p className="text-gray-600 dark:text-gray-400">
-                账号创建时间：{new Date(user?.created_at || '').toLocaleDateString()}
-              </p>
-            </div>
+      <div className="container max-w-6xl mx-auto px-4">
+        {/* User Info Header */}
+        <div className="mb-8 flex items-center gap-6">
+          <img
+            src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+            alt="用户头像"
+            className="w-24 h-24 rounded-full"
+          />
+          <div>
+            <h1 className="text-3xl font-bold">{profile?.username || user.email?.split('@')[0]}</h1>
+            <p className="text-muted-foreground">{user.email}</p>
           </div>
         </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Card className="p-6">
+            <h3 className="font-semibold text-muted-foreground mb-2">提示词总数</h3>
+            <p className="text-3xl font-bold">{userStats?.totalPrompts || 0}</p>
+          </Card>
+          <Card className="p-6">
+            <h3 className="font-semibold text-muted-foreground mb-2">公开提示词</h3>
+            <p className="text-3xl font-bold">{userStats?.publicPrompts || 0}</p>
+          </Card>
+          <Card className="p-6">
+            <h3 className="font-semibold text-muted-foreground mb-2">私有提示词</h3>
+            <p className="text-3xl font-bold">{userStats?.privatePrompts || 0}</p>
+          </Card>
+          <Card className="p-6">
+            <h3 className="font-semibold text-muted-foreground mb-2">收藏提示词</h3>
+            <p className="text-3xl font-bold">{userStats?.starredPrompts || 0}</p>
+          </Card>
+        </div>
+
+        {/* Prompts Tabs */}
+        <Tabs defaultValue="all" className="w-full">
+          <TabsList>
+            <TabsTrigger value="all">全部提示词</TabsTrigger>
+            <TabsTrigger value="public">公开提示词</TabsTrigger>
+            <TabsTrigger value="private">私有提示词</TabsTrigger>
+            <TabsTrigger value="starred">收藏提示词</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 将在下一步实现提示词列表 */}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="public" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 将在下一步实现提示词列表 */}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="private" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 将在下一步实现提示词列表 */}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="starred" className="mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* 将在下一步实现提示词列表 */}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
