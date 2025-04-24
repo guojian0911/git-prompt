@@ -1,4 +1,3 @@
-
 import { useState, useMemo } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -25,6 +24,7 @@ const mockPrompts = [
     description: "帮助用户总结会议内容，提取关键点和行动项目",
     content: "我需要你充当会议总结助手...",
     category: "工作效率",
+    is_public: false,  // Add this property
     author: { name: "张明", avatar: "" },
     stats: { rating: 4.9, comments: 23 }
   },

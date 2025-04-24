@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import PromptCard from "../prompts/PromptCard";
@@ -12,6 +11,7 @@ const featuredPrompts = [
     description: "帮助用户总结会议内容，提取关键点和行动项目",
     content: "我需要你充当会议总结助手。我会提供会议的对话内容，你需要：\n1. 提炼出会议的主要议题\n2. 列出讨论的关键点\n3. 整理所有的决定事项\n4. 标记所有的行动项和负责人\n5. 提供一个简洁的总体总结\n请以结构化的方式整理这些信息，使其易于阅读和理解。",
     category: "工作效率",
+    is_public: false,
     author: {
       name: "张明",
       avatar: ""
