@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Search, Moon, Sun } from "lucide-react";
@@ -21,8 +22,8 @@ const Navbar = () => {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="bg-gradient-primary rounded-lg w-8 h-8 flex items-center justify-center text-white font-bold">S</div>
-            <span className="text-xl font-bold gradient-text">ShumerPrompt</span>
+            <div className="bg-gradient-primary rounded-lg w-8 h-8 flex items-center justify-center text-white font-bold">G</div>
+            <span className="text-xl font-bold gradient-text">GitPrompt</span>
           </Link>
 
           {/* Desktop Navigation */}

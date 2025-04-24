@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +9,8 @@ import NotFound from "./pages/NotFound";
 import PromptDetail from "./pages/PromptDetail";
 import SubmitPrompt from "./pages/SubmitPrompt";
 import Categories from "./pages/Categories";
+import Login from "./pages/auth/Login";
+import SignUp from "./pages/auth/SignUp";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +27,8 @@ const App = () => (
           <Route path="/explore" element={<Index />} />
           <Route path="/categories" element={<Categories />} />
           <Route path="/category/:slug" element={<Index />} />
+          <Route path="/auth/login" element={<Login />} />
+          <Route path="/auth/signup" element={<SignUp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
