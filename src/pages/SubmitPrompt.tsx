@@ -10,7 +10,15 @@ export default function SubmitPrompt() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  const { form, onSubmit, checkingAuth, setCheckingAuth, forkedPrompt } = usePromptForm();
+  const { form, onSubmit, checkingAuth, setCheckingAuth, forkedPrompt, setEditMode } = usePromptForm();
+
+  // 检查URL参数是否包含edit
+  const urlParams = new URLSearchParams(location.search);
+  const editId = urlParams.get('edit');
+  const isEditMode = !!editId;
+  
+  // 获取传递的编辑数据
+  const editPromptData = location.state?.editPrompt || {};
 
   // 检查用户是否登录
   useEffect(() => {
@@ -23,9 +31,30 @@ export default function SubmitPrompt() {
     }
   }, [user, isLoading, navigate, location.pathname, setCheckingAuth]);
 
+  // 处理编辑模式数据
+  useEffect(() => {
+    if (isEditMode && editPromptData && Object.keys(editPromptData).length > 0) {
+      form.reset({
+        title: editPromptData.title || "",
+        description: editPromptData.description || "",
+        category: editPromptData.category || "",
+        tags: editPromptData.tags || "",
+        content: editPromptData.content || "",
+        example_output: editPromptData.example_output || "",
+        is_public: editPromptData.is_public === undefined ? true : editPromptData.is_public,
+        terms: true,
+        forkedFrom: editPromptData.forkedFrom || "",
+      });
+      
+      if (editId) {
+        setEditMode(editId);
+      }
+    }
+  }, [isEditMode, editPromptData, form, editId, setEditMode]);
+
   // 处理 fork 数据
   useEffect(() => {
-    if (forkedPrompt.forkedFrom) {
+    if (!isEditMode && forkedPrompt.forkedFrom) {
       form.reset({
         title: forkedPrompt.title || "",
         description: forkedPrompt.description || "",
@@ -38,7 +67,7 @@ export default function SubmitPrompt() {
         forkedFrom: forkedPrompt.forkedFrom,
       });
     }
-  }, [forkedPrompt, form]);
+  }, [isEditMode, forkedPrompt, form]);
 
   // 如果正在加载认证状态或检查认证，显示加载提示
   if (isLoading || checkingAuth) {
@@ -54,12 +83,14 @@ export default function SubmitPrompt() {
     <div className="container py-12 max-w-4xl mx-auto px-4">
       <div className="mb-8">
         <h1 className="text-3xl md:text-4xl font-bold mb-4">
-          {forkedPrompt.forkedFrom ? "Fork 并修改提示词" : "提交新提示词"}
+          {isEditMode ? "编辑提示词" : forkedPrompt.forkedFrom ? "Fork 并修改提示词" : "提交新提示词"}
         </h1>
         <p className="text-muted-foreground max-w-2xl">
-          {forkedPrompt.forkedFrom 
-            ? "您正在基于一个已有提示词创建新版本。请修改并提升它，然后分享给社区。" 
-            : "与社区分享您的AI提示词。好的提示词应当明确、具体并为AI模型提供足够的上下文信息。"
+          {isEditMode
+            ? "您正在编辑自己的提示词。修改后点击提交更新。"
+            : forkedPrompt.forkedFrom 
+              ? "您正在基于一个已有提示词创建新版本。请修改并提升它，然后分享给社区。" 
+              : "与社区分享您的AI提示词。好的提示词应当明确、具体并为AI模型提供足够的上下文信息。"
           }
         </p>
       </div>
@@ -68,7 +99,8 @@ export default function SubmitPrompt() {
         <PromptForm 
           form={form} 
           onSubmit={onSubmit} 
-          isForking={Boolean(forkedPrompt.forkedFrom)} 
+          isForking={Boolean(forkedPrompt.forkedFrom)}
+          isEditing={isEditMode}
         />
       </div>
 

@@ -36,6 +36,7 @@ const PromptCard = ({
   description,
   content,
   category,
+  is_public,
   author,
   stats,
   user_id,
@@ -103,6 +104,18 @@ const PromptCard = ({
             {showEditButton && (
               <Link
                 to={`/submit?edit=${id}`}
+                state={{
+                  editPrompt: {
+                    id,
+                    title,
+                    description,
+                    content,
+                    category,
+                    tags: Array.isArray(tags) ? tags.join(", ") : tags,
+                    is_public,
+                    forkedFrom: fork_from
+                  }
+                }}
                 className="p-2 text-slate-500 hover:text-shumer-purple transition-colors rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 <Edit className="w-4 h-4" />

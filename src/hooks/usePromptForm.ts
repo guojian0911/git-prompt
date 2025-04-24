@@ -29,6 +29,7 @@ export const usePromptForm = () => {
   const location = useLocation();
   const { user } = useAuth();
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
   const forkedPrompt = location.state || {};
 
   const form = useForm<PromptFormValues>({
@@ -47,6 +48,10 @@ export const usePromptForm = () => {
     mode: "onChange", // 添加实时验证模式
   });
 
+  const setEditMode = (promptId: string) => {
+    setEditingPromptId(promptId);
+  };
+
   const onSubmit = async (data: PromptFormValues) => {
     if (!user) {
       toast.error("请先登录后再提交提示词");
@@ -57,21 +62,46 @@ export const usePromptForm = () => {
     try {
       console.log("提交的数据:", data); // 添加日志查看提交的数据
 
-      const { error: insertError } = await supabase.from("prompts").insert({
-        user_id: user.id,
-        title: data.title,
-        description: data.description,
-        content: data.content,
-        category: data.category,
-        tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
-        example_output: data.example_output || null,
-        is_public: data.is_public,
-      });
+      if (editingPromptId) {
+        // 更新已有提示词
+        const { error: updateError } = await supabase
+          .from("prompts")
+          .update({
+            title: data.title,
+            description: data.description,
+            content: data.content,
+            category: data.category,
+            tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
+            example_output: data.example_output || null,
+            is_public: data.is_public,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", editingPromptId)
+          .eq("user_id", user.id); // 确保只能编辑自己的提示词
 
-      if (insertError) throw insertError;
+        if (updateError) throw updateError;
 
-      toast.success("提示词提交成功！");
-      navigate("/");
+        toast.success("提示词更新成功！");
+      } else {
+        // 创建新提示词
+        const { error: insertError } = await supabase.from("prompts").insert({
+          user_id: user.id,
+          title: data.title,
+          description: data.description,
+          content: data.content,
+          category: data.category,
+          tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
+          example_output: data.example_output || null,
+          is_public: data.is_public,
+          fork_from: data.forkedFrom || null,
+        });
+
+        if (insertError) throw insertError;
+
+        toast.success("提示词提交成功！");
+      }
+      
+      navigate("/profile");
     } catch (error: any) {
       console.error("Error submitting prompt:", error);
       toast.error(error.message || "提交失败，请重试");
@@ -84,5 +114,7 @@ export const usePromptForm = () => {
     checkingAuth,
     setCheckingAuth,
     forkedPrompt,
+    setEditMode,
+    editingPromptId,
   };
 };

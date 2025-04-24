@@ -13,12 +13,14 @@ interface PromptFormProps {
   form: UseFormReturn<PromptFormValues>;
   onSubmit: (data: PromptFormValues) => Promise<void>;
   isForking?: boolean;
+  isEditing?: boolean;
 }
 
 export const PromptForm = ({
   form,
   onSubmit,
   isForking = false,
+  isEditing = false,
 }: PromptFormProps) => {
   return (
     <Form {...form}>
@@ -137,7 +139,12 @@ export const PromptForm = ({
           className="w-full"
           disabled={!form.formState.isValid}
         >
-          {isForking ? "提交修改后的提示词" : "提交提示词"}
+          {isEditing 
+            ? "保存更新" 
+            : isForking 
+              ? "提交修改后的提示词" 
+              : "提交提示词"
+          }
         </Button>
       </form>
     </Form>
