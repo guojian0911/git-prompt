@@ -1,7 +1,5 @@
 
-import { GitFork } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
 
 interface PromptBadgesProps {
   category: string;
@@ -10,28 +8,22 @@ interface PromptBadgesProps {
   isPersonalPage?: boolean;
 }
 
-export const PromptBadges = ({ 
+export const PromptBadges = ({
   category,
   isPrivate,
   isForkPrompt,
   isPersonalPage
 }: PromptBadgesProps) => {
   return (
-    <div className="flex items-center gap-2">
-      <Link
-        to={`/category/${category.toLowerCase()}`}
-        className="text-xs font-medium px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-      >
-        {category}
-      </Link>
+    <div className="flex flex-wrap gap-2">
+      <Badge variant="secondary">{category}</Badge>
       {isPrivate && isPersonalPage && (
-        <Badge variant="secondary" className="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300">
-          Private
+        <Badge variant="outline" className="border-yellow-500 text-yellow-500">
+          私有
         </Badge>
       )}
       {isForkPrompt && (
-        <Badge variant="secondary" className="bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300">
-          <GitFork className="w-3 h-3 mr-1" />
+        <Badge variant="outline" className="border-purple-500 text-purple-500">
           Fork
         </Badge>
       )}

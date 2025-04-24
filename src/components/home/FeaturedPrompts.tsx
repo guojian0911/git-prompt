@@ -1,77 +1,30 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import PromptCard from "../prompts/PromptCard";
 import CategoryButton from "../ui/CategoryButton";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock data for prompts
-const featuredPrompts = [
-  {
-    id: "1",
-    title: "有效的会议总结助手",
-    description: "帮助用户总结会议内容，提取关键点和行动项目",
-    content: "我需要你充当会议总结助手。我会提供会议的对话内容，你需要：\n1. 提炼出会议的主要议题\n2. 列出讨论的关键点\n3. 整理所有的决定事项\n4. 标记所有的行动项和负责人\n5. 提供一个简洁的总体总结\n请以结构化的方式整理这些信息，使其易于阅读和理解。",
-    category: "工作效率",
-    is_public: false,
-    author: {
-      name: "张明",
-      avatar: ""
-    },
-    stats: {
-      rating: 4.9,
-      comments: 23
-    }
+// Static creative writing prompt as example
+const creativeWritingPrompt = {
+  id: "creative-writing-example",
+  title: "创意写作助手",
+  description: "激发灵感，帮助创作者突破写作瓶颈，生成创意内容",
+  content: "请作为我的创意写作助手。我正在寻找关于[主题]的创意写作灵感。请帮我：\n1. 提供3-5个独特的故事创意或角度\n2. 对于每个创意，给出一个引人入胜的开头段落\n3. 提供一些可能的角色描述和发展方向\n4. 建议一些可以增添深度的情节转折或隐喻\n5. 推荐适合这种写作的风格和语调\n\n尽量避免常见的比喻和陈词滥调，提供那些有创新性的、能引发读者共鸣的创意。",
+  category: "创意写作",
+  is_public: true,
+  author: {
+    name: "系统",
+    avatar: ""
   },
-  {
-    id: "2",
-    title: "代码重构专家",
-    description: "帮助开发者重构和优化代码，提高代码质量和可维护性",
-    content: "请担任代码重构专家。我会提供一段代码，你需要：\n1. 分析代码中的潜在问题和优化空间\n2. 提供重构建议，包括设计模式应用、代码结构优化等\n3. 重写代码，确保功能不变的前提下提高其可读性、可维护性和效率\n4. 解释你所做的变更和原因\n\n下面是需要重构的代码：[代码将在此处粘贴]",
-    category: "编程开发",
-    is_public: true,
-    author: {
-      name: "李华",
-      avatar: ""
-    },
-    stats: {
-      rating: 4.8,
-      comments: 19
-    }
-  },
-  {
-    id: "3",
-    title: "个性化学习计划生成器",
-    description: "根据用户的学习目标、时间和偏好生成定制化学习计划",
-    content: "我希望你能为我创建一个个性化学习计划。请基于以下信息：\n1. 学习目标：[目标]\n2. 当前知识水平：[初级/中级/高级]\n3. 可用时间：每周[小时数]小时\n4. 偏好的学习方式：[视频/阅读/实践项目等]\n5. 截止日期：[若有]\n\n提供一个详细的学习计划，包括：\n- 阶段性目标\n- 每周学习内容分配\n- 推荐的学习资源\n- 如何评估学习进度\n- 潜在的学习挑战和应对策略",
-    category: "教育学习",
-    is_public: false,
-    author: {
-      name: "王芳",
-      avatar: ""
-    },
-    stats: {
-      rating: 4.7,
-      comments: 31
-    }
-  },
-  {
-    id: "4",
-    title: "创意写作助手",
-    description: "激发灵感，帮助创作者突破写作瓶颈，生成创意内容",
-    content: "请作为我的创意写作助手。我正在寻找关于[主题]的创意写作灵感。请帮我：\n1. 提供3-5个独特的故事创意或角度\n2. 对于每个创意，给出一个引人入胜的开头段落\n3. 提供一些可能的角色描述和发展方向\n4. 建议一些可以增添深度的情节转折或隐喻\n5. 推荐适合这种写作的风格和语调\n\n尽量避免常见的比喻和陈词滥调，提供那些有创新性的、能引发读者共鸣的创意。",
-    category: "创意写作",
-    is_public: true,
-    author: {
-      name: "赵静",
-      avatar: ""
-    },
-    stats: {
-      rating: 4.9,
-      comments: 27
-    }
+  stats: {
+    rating: 4.9,
+    comments: 27,
+    stars: 0
   }
-];
+};
 
-// Mock data for categories
+// Mock data for categories (keep this for now)
 const categories = [
   { name: "工作效率", icon: "📊", slug: "productivity", count: 124 },
   { name: "创意写作", icon: "✍️", slug: "creative-writing", count: 98 },
@@ -84,8 +37,37 @@ const categories = [
 const FeaturedPrompts = () => {
   const [activeTab, setActiveTab] = useState("featured");
 
-  // Filter out private prompts
-  const publicPrompts = featuredPrompts.filter(prompt => prompt.is_public);
+  // Fetch public prompts
+  const { data: publicPrompts = [], isLoading } = useQuery({
+    queryKey: ['featured-prompts'],
+    queryFn: async () => {
+      const { data: prompts, error } = await supabase
+        .from('prompts')
+        .select(`
+          *,
+          profiles:user_id (
+            username,
+            avatar_url
+          )
+        `)
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(3);
+
+      if (error) throw error;
+
+      return prompts.map(prompt => ({
+        ...prompt,
+        author: {
+          name: prompt.profiles?.username || 'Anonymous',
+          avatar: prompt.profiles?.avatar_url
+        }
+      }));
+    }
+  });
+
+  // Combine static prompt with fetched prompts
+  const allPrompts = [creativeWritingPrompt, ...publicPrompts];
 
   return (
     <div className="py-16 bg-slate-50 dark:bg-slate-900/30">
@@ -118,8 +100,16 @@ const FeaturedPrompts = () => {
 
         {/* Prompts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {publicPrompts.map((prompt) => (
-            <PromptCard key={prompt.id} {...prompt} />
+          {allPrompts.map((prompt) => (
+            <PromptCard
+              key={prompt.id}
+              {...prompt}
+              stats={{
+                rating: 0,
+                comments: 0,
+                stars: prompt.stars_count
+              }}
+            />
           ))}
         </div>
 
