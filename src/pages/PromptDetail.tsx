@@ -108,9 +108,10 @@ const PromptDetail = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleFork = () => {
+  const handleFork = async () => {
     if (!prompt) return;
     
+    // Navigate to submit page with the prompt data
     navigate("/submit", { 
       state: { 
         forkedPrompt: {
@@ -123,6 +124,19 @@ const PromptDetail = () => {
         }
       } 
     });
+    
+    // Increment fork count on the original prompt
+    if (id) {
+      try {
+        await supabase
+          .from('prompts')
+          .update({ fork_count: (prompt.fork_count || 0) + 1 })
+          .eq('id', id);
+      } catch (error) {
+        console.error("Failed to update fork count:", error);
+      }
+    }
+    
     toast.info("已创建提示词副本，您可以在此基础上修改后提交");
   };
 

@@ -30,7 +30,7 @@ export const usePromptForm = () => {
   const { user } = useAuth();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
-  const forkedPrompt = location.state || {};
+  const forkedPrompt = location.state?.forkedPrompt || {};
 
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptFormSchema),
