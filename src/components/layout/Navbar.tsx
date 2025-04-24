@@ -1,19 +1,30 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { Menu, X, Search, Moon, Sun } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Menu, X, Search, Moon, Sun, LogIn, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // TODO: Replace with actual auth state
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
     document.documentElement.classList.toggle("dark");
+  };
+
+  const handleLogout = () => {
+    // TODO: Implement actual logout logic
+    setIsAuthenticated(false);
+    toast.success("Successfully logged out");
+    navigate("/");
   };
 
   return (
@@ -66,8 +77,43 @@ const Navbar = () => {
             <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
-            <Button variant="outline">登录</Button>
-            <Button className="btn-primary">注册</Button>
+            
+            {isAuthenticated ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate("/profile")}
+                >
+                  <User className="h-5 w-5" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  退出
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => navigate("/auth/login")}
+                  className="flex items-center gap-2"
+                >
+                  <LogIn className="h-4 w-4" />
+                  登录
+                </Button>
+                <Button 
+                  className="btn-primary"
+                  onClick={() => navigate("/auth/signup")}
+                >
+                  注册
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -106,9 +152,55 @@ const Navbar = () => {
               >
                 提交提示词
               </Link>
-              <div className="flex space-x-2 px-4 pt-2">
-                <Button variant="outline" className="w-full">登录</Button>
-                <Button className="btn-primary w-full">注册</Button>
+              <div className="flex flex-col space-y-2 px-4 pt-2">
+                {isAuthenticated ? (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        navigate("/profile");
+                        setIsOpen(false);
+                      }}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      个人中心
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleLogout();
+                        setIsOpen(false);
+                      }}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      退出
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        navigate("/auth/login");
+                        setIsOpen(false);
+                      }}
+                    >
+                      登录
+                    </Button>
+                    <Button 
+                      className="btn-primary w-full"
+                      onClick={() => {
+                        navigate("/auth/signup");
+                        setIsOpen(false);
+                      }}
+                    >
+                      注册
+                    </Button>
+                  </>
+                )}
               </div>
             </div>
           </div>
