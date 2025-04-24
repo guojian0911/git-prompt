@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PromptDetail from "./pages/PromptDetail";
+import SubmitPrompt from "./pages/SubmitPrompt";
 
 const queryClient = new QueryClient();
 
@@ -19,11 +20,10 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/prompt/:id" element={<PromptDetail />} />
-          <Route path="/explore" element={<Index />} /> {/* These will be implemented in future versions */}
+          <Route path="/submit" element={<SubmitPrompt />} />
+          <Route path="/explore" element={<Index />} />
           <Route path="/categories" element={<Index />} />
-          <Route path="/submit" element={<Index />} />
           <Route path="/category/:slug" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
