@@ -78,9 +78,7 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
             stats={{
               rating: 0,
               comments: 0,
-              stars: prompt.stars_count,
-              shares: prompt.share_count,
-              forks: prompt.fork_count
+              stars: prompt.stars_count
             }}
           />
         ))}
