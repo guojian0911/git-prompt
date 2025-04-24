@@ -11,6 +11,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   signOut: () => Promise<void>;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -18,13 +19,14 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   profile: null,
   signOut: async () => {},
+  isLoading: true,
 });
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   // 同步用户信息到 profiles 表的函数
   const syncUserProfile = async (user: User) => {
@@ -92,6 +94,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state changed:', event, session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -102,12 +105,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setProfile(null);
         }
 
-        setLoading(false);
+        setIsLoading(false);
       }
     );
 
     // 检查初始会话
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      console.log('Initial session check:', session);
       setSession(session);
       setUser(session?.user ?? null);
       
@@ -116,7 +120,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setProfile(userProfile);
       }
 
-      setLoading(false);
+      setIsLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -126,12 +130,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
-
+  // 不在这里阻塞渲染，而是提供isLoading状态给上下文使用者
   return (
-    <AuthContext.Provider value={{ user, session, profile, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, signOut, isLoading }}>
       {children}
     </AuthContext.Provider>
   );
