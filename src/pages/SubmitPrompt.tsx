@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { Form } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,6 +9,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useAuth } from "@/contexts/AuthContext";
 
 const promptFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -42,6 +42,8 @@ const categories = [
 
 export default function SubmitPrompt() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, isLoading } = useAuth();
   const forkedPrompt = location.state || {};
   
   const form = useForm<PromptFormValues>({
@@ -57,6 +59,14 @@ export default function SubmitPrompt() {
       forkedFrom: "",
     },
   });
+
+  // 检查用户是否登录
+  useEffect(() => {
+    if (!isLoading && !user) {
+      toast.error("请先登录后再提交提示词");
+      navigate("/auth/login");
+    }
+  }, [user, isLoading, navigate]);
 
   // Handle fork data if available
   useEffect(() => {
@@ -77,6 +87,12 @@ export default function SubmitPrompt() {
   }, [forkedPrompt, form]);
 
   const onSubmit = async (data: PromptFormValues) => {
+    if (!user) {
+      toast.error("请先登录后再提交提示词");
+      navigate("/auth/login");
+      return;
+    }
+
     try {
       // 这里先模拟提交，后续会替换为实际的 API 调用
       console.log("Form data:", data);
@@ -85,6 +101,16 @@ export default function SubmitPrompt() {
       toast.error("Failed to submit prompt. Please try again.");
     }
   };
+
+  // 如果正在加载认证状态，显示简单的加载提示
+  if (isLoading) {
+    return (
+      <div className="container py-12 flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-shumer-purple"></div>
+        <span className="ml-3 text-lg">加载中...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-12 max-w-4xl mx-auto px-4">
@@ -223,4 +249,4 @@ export default function SubmitPrompt() {
       </div>
     </div>
   );
-}
+};

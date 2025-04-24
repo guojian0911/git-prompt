@@ -130,7 +130,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     await supabase.auth.signOut();
   };
 
-  // 不在这里阻塞渲染，而是提供isLoading状态给上下文使用者
+  // 无论是否加载完成或用户是否登录，都渲染子组件
   return (
     <AuthContext.Provider value={{ user, session, profile, signOut, isLoading }}>
       {children}
