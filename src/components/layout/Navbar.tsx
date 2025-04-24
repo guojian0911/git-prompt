@@ -1,12 +1,14 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X, Search, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -38,11 +40,30 @@ const Navbar = () => {
 
           {/* Right side actions */}
           <div className="hidden md:flex items-center space-x-4">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Search className="h-5 w-5" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[425px]">
+                <DialogHeader>
+                  <DialogTitle>搜索提示词</DialogTitle>
+                </DialogHeader>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                  <Input
+                    type="text"
+                    placeholder="输入关键词搜索..."
+                    className="pl-10"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
-            <Button variant="ghost" size="icon">
-              <Search className="h-5 w-5" />
             </Button>
             <Button variant="outline">登录</Button>
             <Button className="btn-primary">注册</Button>
