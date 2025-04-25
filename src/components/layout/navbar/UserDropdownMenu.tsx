@@ -1,7 +1,7 @@
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { User, Settings, Star, LogOut } from "lucide-react";
+import { User, Settings, Star, LogOut, Cpu } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -58,6 +58,10 @@ export const UserDropdownMenu = () => {
         <DropdownMenuItem onClick={() => navigate("/starred")}>
           <Star className="mr-2 h-4 w-4" />
           <span>收藏的提示词</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => navigate("/model-settings")}>
+          <Cpu className="mr-2 h-4 w-4" />
+          <span>模型设置</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>

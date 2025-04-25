@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   GitFork,
   Copy,
   MessageSquare,
   Star,
   ArrowLeft,
-  Variable
+  Variable,
+  Cpu
 } from "lucide-react";
 import { toast } from "sonner";
 import CommentList from "@/components/comments/CommentList";
@@ -24,6 +26,8 @@ import PromptDerivationTree from "@/components/prompts/PromptDerivationTree";
 import { usePromptActions } from "@/hooks/usePromptActions";
 import { extractVariables, replaceVariables } from "@/lib/promptVariables";
 import { highlightVariables } from "@/lib/highlightVariables";
+import { highlightVariables as highlightVariablesString } from "@/lib/modelUtils";
+import ModelCaller from "@/components/model/ModelCaller";
 
 const PromptDetail = () => {
   const { id } = useParams();
@@ -315,38 +319,58 @@ const PromptDetail = () => {
                   </Button>
                 </div>
               </div>
-              {promptVariables.length > 0 && (
-                <div className="mb-4 p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-purple-50 dark:bg-purple-900/20">
-                  <div className="flex items-center gap-2 mb-3 text-purple-700 dark:text-purple-300">
-                    <Variable className="h-5 w-5" />
-                    <h4 className="font-medium">自定义变量</h4>
-                  </div>
-                  <div className="grid gap-3">
-                    {promptVariables.map((variable) => (
-                      <div key={variable} className="grid gap-1.5">
-                        <Label htmlFor={`var-${variable}`} className="text-sm text-purple-700 dark:text-purple-300">
-                          {variable}
-                        </Label>
-                        <Input
-                          id={`var-${variable}`}
-                          value={variableValues[variable] || ""}
-                          onChange={(e) => handleVariableChange(variable, e.target.value)}
-                          placeholder={`输入 ${variable} 的值...`}
-                          className="border-purple-200 dark:border-purple-800 focus-visible:ring-purple-300"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
 
-              <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6">
-                <pre className="whitespace-pre-wrap text-slate-700 dark:text-slate-300 text-sm">
-                  {Object.values(variableValues).some(value => value.trim() !== "")
-                    ? processedContent
-                    : highlightVariables(prompt.content)}
-                </pre>
-              </div>
+              <Tabs defaultValue="preview" className="mt-6">
+                <TabsList className="mb-4">
+                  <TabsTrigger value="preview" className="flex items-center gap-1">
+                    <Variable className="h-4 w-4" />
+                    预览
+                  </TabsTrigger>
+                  <TabsTrigger value="use" className="flex items-center gap-1">
+                    <Cpu className="h-4 w-4" />
+                    使用AI
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="preview">
+                  {promptVariables.length > 0 && (
+                    <div className="mb-4 p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                      <div className="flex items-center gap-2 mb-3 text-purple-700 dark:text-purple-300">
+                        <Variable className="h-5 w-5" />
+                        <h4 className="font-medium">自定义变量</h4>
+                      </div>
+                      <div className="grid gap-3">
+                        {promptVariables.map((variable) => (
+                          <div key={variable} className="grid gap-1.5">
+                            <Label htmlFor={`var-${variable}`} className="text-sm text-purple-700 dark:text-purple-300">
+                              {variable}
+                            </Label>
+                            <Input
+                              id={`var-${variable}`}
+                              value={variableValues[variable] || ""}
+                              onChange={(e) => handleVariableChange(variable, e.target.value)}
+                              placeholder={`输入 ${variable} 的值...`}
+                              className="border-purple-200 dark:border-purple-800 focus-visible:ring-purple-300"
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6">
+                    <pre className="whitespace-pre-wrap text-slate-700 dark:text-slate-300 text-sm">
+                      {Object.values(variableValues).some(value => value.trim() !== "")
+                        ? processedContent
+                        : <div dangerouslySetInnerHTML={{ __html: highlightVariablesString(prompt.content) }} />}
+                    </pre>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="use">
+                  <ModelCaller prompt={prompt.content} />
+                </TabsContent>
+              </Tabs>
             </CardContent>
           </Card>
 

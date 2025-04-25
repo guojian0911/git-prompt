@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Cpu, Settings, Star } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 interface MobileMenuProps {
@@ -45,7 +45,40 @@ export const MobileMenu = ({ isOpen, onClose, onLogout }: MobileMenuProps) => {
                 }}
               >
                 <User className="h-4 w-4 mr-2" />
-                个人中心
+                个人主页
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  navigate("/account");
+                  onClose();
+                }}
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                账户设置
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  navigate("/starred");
+                  onClose();
+                }}
+              >
+                <Star className="h-4 w-4 mr-2" />
+                收藏的提示词
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => {
+                  navigate("/model-settings");
+                  onClose();
+                }}
+              >
+                <Cpu className="h-4 w-4 mr-2" />
+                模型设置
               </Button>
               <Button
                 variant="outline"

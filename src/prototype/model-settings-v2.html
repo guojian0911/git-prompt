@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>模型设置 - GitPrompt</title>
+  <!-- 使用与项目相同的样式库 -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* 模拟项目中的样式 */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    .provider-item {
+      padding: 0.75rem 1rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .provider-item:hover {
+      background-color: #f3f4f6;
+    }
+    .provider-item.active {
+      background-color: #eff6ff;
+      color: #3b82f6;
+    }
+    .dark .provider-item:hover {
+      background-color: #374151;
+    }
+    .dark .provider-item.active {
+      background-color: #1e3a8a;
+      color: #93c5fd;
+    }
+    .input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border-radius: 0.375rem;
+      border: 1px solid #d1d5db;
+      background-color: #fff;
+      font-size: 0.875rem;
+    }
+    .dark .input {
+      border-color: #4b5563;
+      background-color: #1f2937;
+      color: #e0e0e0;
+    }
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 0.375rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background-color: #3b82f6;
+      color: white;
+    }
+    .btn-primary:hover {
+      background-color: #2563eb;
+    }
+    .btn-outline {
+      border: 1px solid #d1d5db;
+      background-color: transparent;
+    }
+    .btn-outline:hover {
+      background-color: #f3f4f6;
+    }
+    .dark .btn-outline {
+      border-color: #4b5563;
+      color: #e0e0e0;
+    }
+    .dark .btn-outline:hover {
+      background-color: #374151;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 48px;
+      height: 24px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #3b82f6;
+    }
+    input:checked + .slider:before {
+      transform: translateX(24px);
+    }
+    .model-list {
+      border: 1px solid #e5e7eb;
+      border-radius: 0.5rem;
+      min-height: 200px;
+    }
+    .dark .model-list {
+      border-color: #4b5563;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+  <div class="flex h-screen">
+    <!-- 左侧提供商列表 -->
+    <div class="w-64 border-r border-gray-200 dark:border-gray-700 p-4 overflow-y-auto">
+      <h2 class="text-lg font-medium mb-4">提供商</h2>
+      
+      <!-- 提供商列表 -->
+      <div class="space-y-1">
+        <div class="provider-item active flex items-center">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"></path>
+          </svg>
+          OpenAI
+        </div>
+        <div class="provider-item flex items-center">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M11.2 5.0799C11.2 3.3866 12.5866 2 14.28 2C15.9733 2 17.36 3.3866 17.36 5.0799C17.36 6.7733 15.9733 8.1599 14.28 8.1599C12.5866 8.1599 11.2 6.7733 11.2 5.0799Z"></path>
+            <path d="M6.64 12.16C6.64 10.4666 8.0266 9.08 9.72 9.08C11.4133 9.08 12.8 10.4666 12.8 12.16C12.8 13.8533 11.4133 15.24 9.72 15.24C8.0266 15.24 6.64 13.8533 6.64 12.16Z"></path>
+            <path d="M14.28 22C12.5866 22 11.2 20.6133 11.2 18.92C11.2 17.2266 12.5866 15.84 14.28 15.84C15.9733 15.84 17.36 17.2266 17.36 18.92C17.36 20.6133 15.9733 22 14.28 22Z"></path>
+            <path d="M2 5.0799C2 3.3866 3.3866 2 5.0799 2C6.7733 2 8.1599 3.3866 8.1599 5.0799C8.1599 6.7733 6.7733 8.1599 5.0799 8.1599C3.3866 8.1599 2 6.7733 2 5.0799Z"></path>
+            <path d="M5.0799 22C3.3866 22 2 20.6133 2 18.92C2 17.2266 3.3866 15.84 5.0799 15.84C6.7733 15.84 8.1599 17.2266 8.1599 18.92C8.1599 20.6133 6.7733 22 5.0799 22Z"></path>
+            <path d="M18.92 12.16C18.92 10.4666 20.3066 9.08 22 9.08C23.6933 9.08 25.08 10.4666 25.08 12.16C25.08 13.8533 23.6933 15.24 22 15.24C20.3066 15.24 18.92 13.8533 18.92 12.16Z"></path>
+          </svg>
+          Anthropic
+        </div>
+        <div class="provider-item flex items-center">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2L2 7L12 12L22 7L12 2Z"></path>
+            <path d="M2 17L12 22L22 17"></path>
+            <path d="M2 12L12 17L22 12"></path>
+          </svg>
+          OpenRouter
+        </div>
+        <div class="provider-item flex items-center">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"></path>
+          </svg>
+          Google AI
+        </div>
+        <div class="provider-item flex items-center">
+          <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"></path>
+          </svg>
+          添加提供商
+        </div>
+      </div>
+    </div>
+    
+    <!-- 右侧配置区域 -->
+    <div class="flex-1 p-6 overflow-y-auto">
+      <div class="max-w-3xl mx-auto">
+        <h1 class="text-2xl font-bold mb-6">OpenAI</h1>
+        
+        <!-- 配置表单 -->
+        <div class="mb-8">
+          <h2 class="text-xl font-medium mb-4">配置</h2>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Key</label>
+            <div class="relative">
+              <input type="password" class="input pr-10" placeholder="sk-..." value="sk-..."/>
+              <button class="absolute inset-y-0 right-0 px-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+              </button>
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">API密钥将安全地存储在您的浏览器中</p>
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">API Base URL</label>
+            <div class="relative">
+              <input type="text" class="input pr-10" value="https://api.openai.com/v1"/>
+              <button class="absolute inset-y-0 right-0 px-3 flex items-center">
+                <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="mb-6">
+            <div class="flex items-center justify-between">
+              <label class="text-sm font-medium text-gray-700 dark:text-gray-300">推理摘要</label>
+              <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+              </label>
+            </div>
+            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">启用后，系统将自动生成对话摘要</p>
+          </div>
+          
+          <div class="flex space-x-2">
+            <button class="btn btn-outline">测试连接</button>
+            <button class="btn btn-primary">保存配置</button>
+          </div>
+        </div>
+        
+        <!-- 模型列表 -->
+        <div>
+          <h2 class="text-xl font-medium mb-4">模型列表</h2>
+          <div class="model-list p-4">
+            <div class="text-center text-gray-500 dark:text-gray-400 py-8">
+              <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <p class="mt-2">点击"测试连接"获取可用模型列表</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 暗色/亮色主题切换按钮 -->
+  <div class="fixed bottom-4 right-4">
+    <button id="theme-toggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-gray-800 dark:text-gray-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+      </svg>
+    </button>
+  </div>
+
+  <script>
+    // 简单的暗色/亮色主题切换
+    const themeToggle = document.getElementById('theme-toggle');
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+    });
+  </script>
+</body>
+</html>
