@@ -11,7 +11,7 @@ export default function SubmitPrompt() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isLoading } = useAuth();
-  const { form, onSubmit, checkingAuth, setCheckingAuth, forkedPrompt, setEditMode } = usePromptForm();
+  const { form, onSubmit, checkingAuth, setCheckingAuth, forkedPrompt, setEditMode, isSubmitting, resetForm } = usePromptForm();
   const [isLoadingPrompt, setIsLoadingPrompt] = useState(false);
 
   // 检查URL参数是否包含edit或fork
@@ -114,7 +114,7 @@ export default function SubmitPrompt() {
               title: `Copy of ${data.title}` || "",
               description: data.description || "",
               category: data.category || "",
-              tags: Array.isArray(data.tags) ? data.tags.join(", ") : data.tags || "",
+              tags: Array.isArray(data.tags) ? data.tags.join(",") : data.tags || "",
               content: data.content || "",
               example_output: data.example_output || "",
               is_public: false, // Fork默认为私有
@@ -134,15 +134,8 @@ export default function SubmitPrompt() {
               forkedFrom: formattedData.forkedFrom || "",
             });
 
-            // 更新fork计数
-            try {
-              await supabase
-                .from('prompts')
-                .update({ fork_count: (data.fork_count || 0) + 1 })
-                .eq('id', forkId);
-            } catch (error) {
-              console.error("Failed to update fork count:", error);
-            }
+            // 移除在加载时更新fork计数的逻辑
+            // Fork计数将在用户提交表单后更新
 
             toast.info("已创建提示词副本，您可以在此基础上修改后提交");
           }
@@ -171,7 +164,7 @@ export default function SubmitPrompt() {
           title: editPromptData.title || "",
           description: editPromptData.description || "",
           category: editPromptData.category || "",
-          tags: Array.isArray(editPromptData.tags) ? editPromptData.tags.join(", ") : editPromptData.tags || "",
+          tags: Array.isArray(editPromptData.tags) ? editPromptData.tags.join(",") : editPromptData.tags || "",
           content: editPromptData.content || "",
           example_output: editPromptData.example_output || "",
           is_public: editPromptData.is_public === undefined ? true : editPromptData.is_public,
@@ -199,7 +192,7 @@ export default function SubmitPrompt() {
           title: forkedPrompt.title || "",
           description: forkedPrompt.description || "",
           category: forkedPrompt.category || "",
-          tags: Array.isArray(forkedPrompt.tags) ? forkedPrompt.tags.join(", ") : forkedPrompt.tags || "",
+          tags: Array.isArray(forkedPrompt.tags) ? forkedPrompt.tags.join(",") : forkedPrompt.tags || "",
           content: forkedPrompt.content || "",
           example_output: forkedPrompt.exampleOutput || "",
           is_public: false, // Fork默认为私有
@@ -243,6 +236,8 @@ export default function SubmitPrompt() {
           onSubmit={onSubmit}
           isForking={Boolean(forkedPrompt.forkedFrom)}
           isEditing={isEditMode}
+          isSubmitting={isSubmitting}
+          resetForm={resetForm}
         />
       </div>
 

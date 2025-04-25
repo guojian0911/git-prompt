@@ -1,57 +1,139 @@
 import { useState, useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import CategoryButton from "@/components/ui/CategoryButton";
 import PromptCard from "@/components/prompts/PromptCard";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
+import { categories, Category } from "@/constants/categories";
+import { supabase } from "@/integrations/supabase/client";
 
-// Mock categories data (same as in FeaturedPrompts)
-const categories = [
-  { name: "工作效率", icon: "📊", slug: "productivity", count: 124 },
-  { name: "创意写作", icon: "✍️", slug: "creative-writing", count: 98 },
-  { name: "编程开发", icon: "💻", slug: "programming", count: 156 },
-  { name: "教育学习", icon: "📚", slug: "education", count: 87 },
-  { name: "数据分析", icon: "📈", slug: "data-analysis", count: 65 },
-  { name: "生活助手", icon: "🏠", slug: "lifestyle", count: 112 }
-];
-
-// Mock prompts data
-const mockPrompts = [
-  {
-    id: "1",
-    title: "有效的会议总结助手",
-    description: "帮助用户总结会议内容，提取关键点和行动项目",
-    content: "我需要你充当会议总结助手...",
-    category: "工作效率",
-    is_public: false,
-    author: { name: "张明", avatar: "" },
-    stats: { rating: 4.9, comments: 23 }
-  },
-  {
-    id: "2",
-    title: "代码重构专家",
-    description: "帮助开发者重构和优化代码，提高代码质量和可维护性",
-    content: "请担任代码重构专家...",
-    category: "编程开发",
-    is_public: true,
-    author: { name: "李华", avatar: "" },
-    stats: { rating: 4.8, comments: 19 }
-  }
-];
+interface Prompt {
+  id: string;
+  title: string;
+  description: string;
+  content: string;
+  category: string;
+  is_public: boolean;
+  user_id: string;
+  fork_from?: string | null;
+  stars_count?: number;
+  fork_count?: number;
+  tags?: string[];
+  author?: {
+    name: string;
+    avatar?: string;
+  };
+  stats?: {
+    rating: number;
+    comments: number;
+    stars?: number;
+    forks?: number;
+  };
+}
 
 const Categories = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  // 获取所有公开的提示词
+  const { data: prompts = [], isLoading } = useQuery<Prompt[]>({
+    queryKey: ['prompts', 'public'],
+    queryFn: async () => {
+      try {
+        const { data: promptsData, error } = await supabase
+          .from('prompts')
+          .select(`
+            id,
+            title,
+            description,
+            content,
+            category,
+            is_public,
+            user_id,
+            fork_from,
+            stars_count,
+            fork_count,
+            tags
+          `)
+          .eq('is_public', true);
+
+        if (error) {
+          console.error("Error fetching prompts:", error);
+          throw error;
+        }
+
+        // 获取每个提示词作者的信息
+        const promptsWithProfiles = await Promise.all(
+          promptsData.map(async (prompt) => {
+            let username = 'Anonymous';
+            let avatar_url = null;
+
+            if (prompt.user_id) {
+              const { data: profile } = await supabase
+                .from('profiles')
+                .select('username, avatar_url')
+                .eq('id', prompt.user_id)
+                .single();
+
+              if (profile) {
+                username = profile.username || 'Anonymous';
+                avatar_url = profile.avatar_url;
+              }
+            }
+
+            return {
+              ...prompt,
+              author: {
+                name: username,
+                avatar: avatar_url
+              },
+              stats: {
+                rating: 0,
+                comments: 0,
+                stars: prompt.stars_count || 0,
+                forks: prompt.fork_count || 0
+              }
+            };
+          })
+        );
+
+        return promptsWithProfiles;
+      } catch (error) {
+        console.error("Error processing prompts:", error);
+        return [];
+      }
+    }
+  });
+
+  // 计算每个分类的提示词数量
+  const categoriesWithCount = useMemo(() => {
+    const countMap: Record<string, number> = {};
+
+    // 统计每个分类的提示词数量
+    prompts.forEach(prompt => {
+      if (prompt.category) {
+        countMap[prompt.category] = (countMap[prompt.category] || 0) + 1;
+      }
+    });
+
+    // 将统计结果添加到分类数据中
+    return categories.map(category => ({
+      ...category,
+      count: countMap[category.value] || 0
+    }));
+  }, [prompts]);
+
+  // 根据选中的分类和搜索关键词过滤提示词
   const filteredPrompts = useMemo(() => {
-    return mockPrompts.filter(prompt => {
+    return prompts.filter(prompt => {
       const matchesCategory = !selectedCategory || prompt.category === selectedCategory;
       const matchesSearch = prompt.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           prompt.description.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     });
-  }, [selectedCategory, searchQuery]);
+  }, [prompts, selectedCategory, searchQuery]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -79,21 +161,24 @@ const Categories = () => {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-12">
-          <CategoryButton 
+          <CategoryButton
             key="all"
             name="全部"
             icon="🔍"
             slug="all"
-            count={mockPrompts.length}
+            count={prompts.length}
             isSelected={!selectedCategory}
             onClick={() => setSelectedCategory(null)}
           />
-          {categories.map((category) => (
-            <CategoryButton 
-              key={category.slug}
-              {...category}
-              isSelected={selectedCategory === category.name}
-              onClick={() => setSelectedCategory(category.name)}
+          {categoriesWithCount.map((category) => (
+            <CategoryButton
+              key={category.value}
+              name={category.label}
+              icon={category.icon}
+              slug={category.value}
+              count={category.count || 0}
+              isSelected={selectedCategory === category.value}
+              onClick={() => setSelectedCategory(category.value)}
             />
           ))}
         </div>
@@ -101,7 +186,20 @@ const Categories = () => {
         {/* Filtered Prompts Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredPrompts.map((prompt) => (
-            <PromptCard key={prompt.id} {...prompt} />
+            <PromptCard
+              key={prompt.id}
+              id={prompt.id}
+              title={prompt.title}
+              description={prompt.description}
+              content={prompt.content}
+              category={prompt.category}
+              is_public={prompt.is_public}
+              user_id={prompt.user_id}
+              fork_from={prompt.fork_from}
+              author={prompt.author || { name: 'Anonymous' }}
+              stats={prompt.stats || { rating: 0, comments: 0 }}
+              tags={prompt.tags}
+            />
           ))}
         </div>
 

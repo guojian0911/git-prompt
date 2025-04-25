@@ -19,32 +19,25 @@ export const MobileMenu = ({ isOpen, onClose, onLogout }: MobileMenuProps) => {
   return (
     <div className="md:hidden mt-4 py-4 border-t border-slate-200 dark:border-slate-700">
       <div className="flex flex-col space-y-4">
-        <Link 
-          to="/explore" 
+        <Link
+          to="/explore"
           className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
           onClick={onClose}
         >
           探索
         </Link>
-        <Link 
-          to="/categories" 
+        <Link
+          to="/categories"
           className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
           onClick={onClose}
         >
           分类
         </Link>
-        <Link 
-          to="/submit" 
-          className="px-4 py-2 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
-          onClick={onClose}
-        >
-          提交提示词
-        </Link>
         <div className="flex flex-col space-y-2 px-4 pt-2">
           {user ? (
             <>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => {
                   navigate("/profile");
@@ -54,8 +47,8 @@ export const MobileMenu = ({ isOpen, onClose, onLogout }: MobileMenuProps) => {
                 <User className="h-4 w-4 mr-2" />
                 个人中心
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full justify-start"
                 onClick={() => {
                   onLogout();
@@ -68,8 +61,8 @@ export const MobileMenu = ({ isOpen, onClose, onLogout }: MobileMenuProps) => {
             </>
           ) : (
             <>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="w-full"
                 onClick={() => {
                   navigate("/auth/login");
@@ -78,7 +71,7 @@ export const MobileMenu = ({ isOpen, onClose, onLogout }: MobileMenuProps) => {
               >
                 登录
               </Button>
-              <Button 
+              <Button
                 className="btn-primary w-full"
                 onClick={() => {
                   navigate("/auth/signup");

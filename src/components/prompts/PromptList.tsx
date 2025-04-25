@@ -5,6 +5,7 @@ import { Card } from "@/components/ui/card";
 import PromptCard from "./PromptCard";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
+import { PromptState } from "@/constants/promptStates";
 
 interface PromptListProps {
   userId: string;
@@ -20,18 +21,18 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
     queryFn: async () => {
       // For starred prompts, we need to query differently
       if (filter === 'starred') {
-        // For starred prompts, we'll just look for prompts with stars_count > 0
-        // since the starred_prompts table isn't defined in our types
+        // 查询stars_count > 0的提示词，表示用户已收藏，且状态为正常
         const { data: promptsData, error: promptsError } = await supabase
           .from('prompts')
           .select('*')
           .gt('stars_count', 0)
+          .eq('state', PromptState.NORMAL)
           .range((page - 1) * perPage, page * perPage - 1);
-          
+
         if (promptsError) throw promptsError;
-        
+
         if (!promptsData?.length) return [];
-        
+
         // Now we need to get author info for each prompt
         return Promise.all(promptsData.map(async (prompt) => {
           const { data: profileData } = await supabase
@@ -39,7 +40,7 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
             .select('id, username, avatar_url')
             .eq('id', prompt.user_id)
             .single();
-            
+
           return {
             ...prompt,
             author: {
@@ -55,7 +56,10 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
         }));
       } else {
         // Regular prompt queries (all, public, private)
-        let query = supabase.from('prompts').select('*').eq('user_id', userId);
+        let query = supabase.from('prompts')
+          .select('*')
+          .eq('user_id', userId)
+          .eq('state', PromptState.NORMAL);
 
         switch (filter) {
           case 'public':
@@ -130,22 +134,22 @@ const PromptList = ({ userId, filter }: PromptListProps) => {
           />
         ))}
       </div>
-      
+
       <Pagination>
         <PaginationContent>
           <PaginationItem>
-            <PaginationPrevious 
+            <PaginationPrevious
               onClick={() => setPage(p => Math.max(1, p - 1))}
               className="cursor-pointer"
             />
           </PaginationItem>
-          
+
           <PaginationItem>
             <PaginationLink isActive>{page}</PaginationLink>
           </PaginationItem>
-          
+
           <PaginationItem>
-            <PaginationNext 
+            <PaginationNext
               onClick={() => setPage(p => p + 1)}
               className="cursor-pointer"
             />

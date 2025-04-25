@@ -36,7 +36,7 @@ const Profile = () => {
       const { count: starredCount, error: starredError } = await supabase
         .from('prompts')
         .select('*', { count: 'exact', head: true })
-        .eq('stars_count', 1);
+        .gt('stars_count', 0);
 
       if (starredError) {
         console.error("Error fetching starred prompts:", starredError);
@@ -62,9 +62,15 @@ const Profile = () => {
         {/* 用户信息头部 */}
         <div className="mb-8 flex items-center gap-6">
           <img
-            src={profile?.avatar_url || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`}
+            src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${user.email || 'user'}`}
             alt="用户头像"
             className="w-24 h-24 rounded-full"
+            onError={(e) => {
+              // 如果图片加载失败，使用纯色背景和文字作为备用
+              const target = e.target as HTMLImageElement;
+              target.onerror = null; // 防止无限循环
+              target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23764abc'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='35' fill='white' text-anchor='middle' dominant-baseline='middle'%3E${(user.email?.[0] || 'U').toUpperCase()}%3C/text%3E%3C/svg%3E`;
+            }}
           />
           <div>
             <h1 className="text-3xl font-bold">{profile?.username || user.email?.split('@')[0]}</h1>

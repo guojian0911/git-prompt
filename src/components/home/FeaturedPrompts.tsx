@@ -1,39 +1,13 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import PromptCard from "../prompts/PromptCard";
 import { usePublicPrompts } from "@/hooks/usePublicPrompts";
 import { FeaturedHeader } from "./FeaturedHeader";
 import { CategoriesSection } from "./CategoriesSection";
-import { toast } from "sonner";
 
 const FeaturedPrompts = () => {
-  const navigate = useNavigate();
+  // 移除 navigate，因为不再需要导航到 Fork 页面
   const { data: publicPrompts = [] } = usePublicPrompts();
-
-  // 更新fork逻辑，确保数据正确传递
-  const handleForkPrompt = (prompt: any) => {
-    // 将URL参数添加到导航中，以防state丢失
-    const url = `/submit?fork=${prompt.id}`;
-
-    navigate(url, {
-      state: {
-        forkedPrompt: {
-          title: `Copy of ${prompt.title}`,
-          description: prompt.description,
-          content: prompt.content,
-          category: prompt.category,
-          tags: prompt.tags || [],
-          forkedFrom: prompt.id,
-          // 添加其他可能需要的字段
-          example_output: prompt.example_output || ""
-        }
-      }
-    });
-
-    // 添加toast通知
-    toast.info("已创建提示词副本，您可以在此基础上修改后提交");
-  };
 
   return (
     <div className="py-16 bg-slate-50 dark:bg-slate-900/30">
@@ -41,12 +15,11 @@ const FeaturedPrompts = () => {
         <FeaturedHeader activeTab="featured" onTabChange={() => {}} />
 
         {/* Prompts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
           {[...publicPrompts].map((prompt) => (
             <PromptCard
               key={prompt.id}
               {...prompt}
-              onFork={() => handleForkPrompt(prompt)}
             />
           ))}
         </div>

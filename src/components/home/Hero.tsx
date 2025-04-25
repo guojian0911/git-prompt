@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   return (
@@ -10,18 +11,18 @@ const Hero = () => {
         <div className="absolute top-10 left-1/4 w-72 h-72 bg-shumer-purple/10 rounded-full filter blur-3xl"></div>
         <div className="absolute bottom-10 right-1/3 w-96 h-96 bg-shumer-blue/10 rounded-full filter blur-3xl"></div>
       </div>
-      
+
       <div className="container relative z-10 mx-auto px-4 text-center">
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">
           <span className="gradient-text">发现、创建与分享</span>
           <br />
           <span className="text-slate-800 dark:text-white">AI提示词的中心平台</span>
         </h1>
-        
+
         <p className="text-lg md:text-xl text-slate-600 dark:text-slate-300 max-w-3xl mx-auto mb-10">
           探索高质量的AI提示词，提升您与人工智能交互的效率，释放AI的全部潜能
         </p>
-        
+
         {/* Search Bar */}
         <div className="relative max-w-2xl mx-auto mb-10">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -33,13 +34,17 @@ const Hero = () => {
             className="w-full pl-12 pr-4 py-4 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full focus:outline-none focus:ring-2 focus:ring-shumer-purple/50 transition-all shadow-lg"
           />
         </div>
-        
+
         {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-          <Button className="btn-primary h-12 px-8 text-base">浏览提示词</Button>
-          <Button variant="outline" className="btn-outline h-12 px-8 text-base">创建提示词</Button>
+          <Link to="/categories">
+            <Button className="btn-primary h-12 px-8 text-base">浏览提示词</Button>
+          </Link>
+          <Link to="/submit">
+            <Button variant="outline" className="btn-outline h-12 px-8 text-base">创建提示词</Button>
+          </Link>
         </div>
-        
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
           {[

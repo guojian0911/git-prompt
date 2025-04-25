@@ -39,6 +39,7 @@ export const usePromptForm = () => {
   const { user } = useAuth();
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const forkedPrompt = location.state?.forkedPrompt || {};
 
   // 检查是否是编辑模式
@@ -77,8 +78,19 @@ export const usePromptForm = () => {
       return;
     }
 
+    setIsSubmitting(true);
     try {
       // 提交数据
+
+      // 确保tags是数组
+      const tagsArray = typeof data.tags === 'string'
+        ? data.tags.split(',').map(tag => tag.trim()).filter(tag => tag)
+        : Array.isArray(data.tags)
+          ? data.tags
+          : [];
+
+      console.log('提交的原始标签数据:', data.tags); // 调试日志
+      console.log('处理后的标签数据:', tagsArray); // 调试日志
 
       if (editingPromptId) {
         // 更新已有提示词
@@ -89,7 +101,7 @@ export const usePromptForm = () => {
             description: data.description,
             content: data.content,
             category: data.category,
-            tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
+            tags: tagsArray,
             example_output: data.example_output || null,
             is_public: data.is_public,
             updated_at: new Date().toISOString(),
@@ -108,13 +120,36 @@ export const usePromptForm = () => {
           description: data.description,
           content: data.content,
           category: data.category,
-          tags: data.tags.split(",").map(tag => tag.trim()).filter(tag => tag),
+          tags: tagsArray,
           example_output: data.example_output || null,
           is_public: data.is_public,
           fork_from: data.forkedFrom || null,
         });
 
         if (insertError) throw insertError;
+
+        // 如果是Fork操作，更新原始提示词的fork_count
+        if (data.forkedFrom) {
+          try {
+            // 先获取当前的fork_count
+            const { data: originalPrompt } = await supabase
+              .from('prompts')
+              .select('fork_count')
+              .eq('id', data.forkedFrom)
+              .single();
+
+            if (originalPrompt) {
+              // 更新fork_count
+              await supabase
+                .from('prompts')
+                .update({ fork_count: (originalPrompt.fork_count || 0) + 1 })
+                .eq('id', data.forkedFrom);
+            }
+          } catch (error) {
+            console.error("Failed to update fork count:", error);
+            // 不阻止主流程，即使更新fork_count失败
+          }
+        }
 
         toast.success("提示词提交成功！");
       }
@@ -123,7 +158,27 @@ export const usePromptForm = () => {
     } catch (error: any) {
       console.error("Error submitting prompt:", error);
       toast.error(error.message || "提交失败，请重试");
+    } finally {
+      setIsSubmitting(false);
     }
+  };
+
+  // 重置表单函数
+  const resetForm = () => {
+    form.reset({
+      title: "",
+      description: "",
+      category: "",
+      tags: "",
+      content: "",
+      example_output: "",
+      is_public: false,
+      terms: false,
+      forkedFrom: "",
+    });
+
+    // 触发表单值变化事件，确保UI更新
+    form.trigger();
   };
 
   return {
@@ -134,5 +189,7 @@ export const usePromptForm = () => {
     forkedPrompt,
     setEditMode,
     editingPromptId,
+    isSubmitting,
+    resetForm,
   };
 };

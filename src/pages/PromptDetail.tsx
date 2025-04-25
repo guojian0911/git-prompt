@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,6 @@ import {
   Copy,
   MessageSquare,
   Star,
-  StarOff,
   ArrowLeft
 } from "lucide-react";
 import { toast } from "sonner";
@@ -17,17 +16,17 @@ import CommentList from "@/components/comments/CommentList";
 import CommentForm from "@/components/comments/CommentForm";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+// import { useAuth } from "@/contexts/AuthContext"; // 暂时不需要用户信息
 import PromptDerivationTree from "@/components/prompts/PromptDerivationTree";
+import { usePromptActions } from "@/hooks/usePromptActions";
 
 const PromptDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user } = useAuth();
+  // const { user } = useAuth(); // 暂时不需要用户信息
   const [copied, setCopied] = useState(false);
-  const [isStarred, setIsStarred] = useState(false);
-  const [starCount, setStarCount] = useState(0);
   const [showComments, setShowComments] = useState(false);
+  const { isStarred, starCount, handleToggleStar } = usePromptActions(id || "", 0);
 
   // Fetch prompt data from Supabase
   const { data: prompt, isLoading, error } = useQuery({
@@ -73,14 +72,10 @@ const PromptDetail = () => {
     }
   });
 
-  // Update star count from prompt data when it loads
-  useEffect(() => {
-    if (prompt) {
-      setStarCount(prompt.stats.stars);
-    }
-  }, [prompt]);
+  // 不再需要手动更新starCount，usePromptActions会处理
 
-  const [comments, setComments] = useState([
+  // 使用常量而不是状态，因为目前没有更新评论的功能
+  const comments = [
     {
       id: "1",
       author: {
@@ -99,7 +94,7 @@ const PromptDetail = () => {
       content: "适合新手产品经理使用，文档结构非常清晰。",
       createdAt: "5天前"
     }
-  ]);
+  ];
 
   const handleCopy = () => {
     if (!prompt) return;
@@ -130,31 +125,12 @@ const PromptDetail = () => {
       }
     });
 
-    // Increment fork count on the original prompt
-    if (id) {
-      try {
-        await supabase
-          .from('prompts')
-          .update({ fork_count: (prompt.fork_count || 0) + 1 })
-          .eq('id', id);
-      } catch (error) {
-        console.error("Failed to update fork count:", error);
-      }
-    }
+    // Fork计数将在用户提交表单后更新
 
     toast.info("已创建提示词副本，您可以在此基础上修改后提交");
   };
 
-  const handleToggleStar = () => {
-    if (isStarred) {
-      setStarCount(prev => prev - 1);
-      toast.success("已取消收藏");
-    } else {
-      setStarCount(prev => prev + 1);
-      toast.success("已添加到收藏");
-    }
-    setIsStarred(!isStarred);
-  };
+  // handleToggleStar 现在由 usePromptActions 提供
 
   if (isLoading) {
     return (
@@ -216,9 +192,15 @@ const PromptDetail = () => {
             <CardHeader>
               <div className="flex items-center gap-4">
                 <img
-                  src={prompt.author.avatar}
+                  src={prompt.author.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${prompt.author.name || 'user'}`}
                   alt={prompt.author.name}
                   className="w-12 h-12 rounded-full"
+                  onError={(e) => {
+                    // 如果图片加载失败，使用纯色背景和文字作为备用
+                    const target = e.target as HTMLImageElement;
+                    target.onerror = null; // 防止无限循环
+                    target.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23764abc'/%3E%3Ctext x='50' y='50' font-family='Arial' font-size='35' fill='white' text-anchor='middle' dominant-baseline='middle'%3E${(prompt.author.name?.[0] || 'U').toUpperCase()}%3C/text%3E%3C/svg%3E`;
+                  }}
                 />
                 <div>
                   <h3 className="font-medium">{prompt.author.name}</h3>
