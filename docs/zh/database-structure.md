@@ -23,6 +23,7 @@
 - `view_count`: 查看次数
 - `stars_count`: 星标数
 - `fork_count`: 复制次数
+- `state`: 提示词状态，默认为0(正常)，1表示已删除(逻辑删除)
 
 ### 2. 用户相关表
 
@@ -36,7 +37,26 @@
 - `created_at`: 创建时间
 - `updated_at`: 更新时间
 
-### 3. 教程相关表
+### 3. 提示词状态常量
+
+提示词的状态由 `src/constants/promptStates.ts` 中的枚举定义：
+
+```typescript
+// 提示词状态常量
+export enum PromptState {
+  NORMAL = 0,      // 正常状态
+  DELETED = 1,     // 已删除（逻辑删除）
+  // 以下是未来可能的扩展状态
+  // ARCHIVED = 2,    // 已归档
+  // PENDING = 3,     // 待审核
+  // REJECTED = 4,    // 审核拒绝
+  // FEATURED = 5,    // 精选推荐
+}
+```
+
+这种设计允许用户"删除"提示词而不实际从数据库中移除记录，便于未来可能的恢复功能。
+
+### 4. 教程相关表
 
 #### `tutorials` 表
 存储教程信息
@@ -113,8 +133,20 @@ const { error } = await supabase.from("prompts").insert({
 const { data: prompts } = useQuery({
   queryKey: ['prompts', userId, filter, page],
   queryFn: async () => {
-    let query = supabase.from('prompts').select('*').eq('user_id', userId);
-    // ... 根据过滤条件修改查询
+    let query = supabase.from('prompts')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('state', PromptState.NORMAL); // 只查询状态正常的提示词
+
+    // 根据过滤条件修改查询
+    if (filter === 'public') {
+      query = query.eq('is_public', true);
+    } else if (filter === 'private') {
+      query = query.eq('is_public', false);
+    } else if (filter === 'starred') {
+      query = query.gt('stars_count', 0);
+    }
+
     const { data, error } = await query.range((page - 1) * perPage, page * perPage - 1);
     if (error) throw error;
     return data;
@@ -122,19 +154,32 @@ const { data: prompts } = useQuery({
 });
 ```
 
-#### 分享提示词
-1. 用户点击分享按钮，打开分享对话框
-2. 输入目标用户名称
-3. 前端通过 Supabase 客户端将分享记录插入 shared_prompts 表
-4. 同时更新原提示词的分享计数
+#### 公开分享提示词
+1. 用户在个人主页选择要公开的提示词
+2. 更新提示词的 `is_public` 字段为 `true`
+3. 公开的提示词将在首页和分类页面可见
 
 ```typescript
-// 示例代码 - 分享提示词
-const { error } = await supabase.from('shared_prompts').insert({
-  prompt_id: promptId,
-  shared_by: user.id,
-  shared_with: targetUser.id
-});
+// 示例代码 - 公开分享提示词
+const { error } = await supabase
+  .from('prompts')
+  .update({ is_public: true })
+  .eq('id', promptId)
+  .eq('user_id', userId); // 确保只能公开自己的提示词
+```
+
+#### 删除提示词（逻辑删除）
+1. 用户点击删除按钮，弹出确认对话框
+2. 用户确认后，前端通过 Supabase 客户端更新提示词的 `state` 字段为 `PromptState.DELETED`
+3. 提示词在UI中不再显示，但在数据库中仍然保留
+
+```typescript
+// 示例代码 - 逻辑删除提示词
+const { error } = await supabase
+  .from('prompts')
+  .update({ state: PromptState.DELETED })
+  .eq('id', promptId)
+  .eq('user_id', userId); // 确保只能删除自己的提示词
 ```
 
 ### 3. 用户个人资料操作流程
@@ -158,10 +203,11 @@ const { data: profile } = await supabase
 
 1. 每个用户只能访问、修改自己创建的提示词
 2. 公开的提示词可以被所有用户查看
-3. 私有提示词只能被创建者和被分享的用户访问
+3. 私有提示词只能被创建者访问
 4. 用户个人资料信息受到保护，只有自己能够修改
+5. 已删除的提示词（state=DELETED）在查询中被过滤掉
 
-这种设计确保了数据的安全性和隐私性，同时允许用户根据需要共享和协作。
+这种设计确保了数据的安全性和隐私性，同时允许用户控制自己内容的可见性。
 
 ## 前端数据流
 

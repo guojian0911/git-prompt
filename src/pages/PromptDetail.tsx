@@ -1,15 +1,18 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   GitFork,
   Copy,
   MessageSquare,
   Star,
-  ArrowLeft
+  ArrowLeft,
+  Variable
 } from "lucide-react";
 import { toast } from "sonner";
 import CommentList from "@/components/comments/CommentList";
@@ -19,6 +22,8 @@ import { supabase } from "@/integrations/supabase/client";
 // import { useAuth } from "@/contexts/AuthContext"; // 暂时不需要用户信息
 import PromptDerivationTree from "@/components/prompts/PromptDerivationTree";
 import { usePromptActions } from "@/hooks/usePromptActions";
+import { extractVariables, replaceVariables } from "@/lib/promptVariables";
+import { highlightVariables } from "@/lib/highlightVariables";
 
 const PromptDetail = () => {
   const { id } = useParams();
@@ -27,6 +32,19 @@ const PromptDetail = () => {
   const [copied, setCopied] = useState(false);
   const [showComments, setShowComments] = useState(false);
   const { isStarred, starCount, handleToggleStar } = usePromptActions(id || "", 0);
+
+  // 变量相关状态
+  const [promptVariables, setPromptVariables] = useState<string[]>([]);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+  const [processedContent, setProcessedContent] = useState<string>("");
+
+  // 处理变量值变化
+  const handleVariableChange = (variable: string, value: string) => {
+    setVariableValues(prev => ({
+      ...prev,
+      [variable]: value
+    }));
+  };
 
   // Fetch prompt data from Supabase
   const { data: prompt, isLoading, error } = useQuery({
@@ -72,6 +90,43 @@ const PromptDetail = () => {
     }
   });
 
+  // 提取变量 - 当提示词内容加载时
+  useEffect(() => {
+    if (prompt?.content) {
+      // 提取变量
+      const variables = extractVariables(prompt.content);
+      setPromptVariables(variables);
+
+      // 初始化变量值 - 全部设为空字符串
+      const initialValues: Record<string, string> = {};
+      variables.forEach(variable => {
+        initialValues[variable] = "";
+      });
+
+      // 设置初始变量值
+      setVariableValues(initialValues);
+
+      // 初始时使用原始内容
+      setProcessedContent(prompt.content);
+    }
+  }, [prompt?.content]);
+
+  // 当变量值改变时更新处理后的内容
+  useEffect(() => {
+    if (prompt?.content && promptVariables.length > 0) {
+      // 只有当有变量值被填写时才替换
+      const hasFilledValues = Object.values(variableValues).some(value => value.trim() !== "");
+
+      if (hasFilledValues) {
+        const newContent = replaceVariables(prompt.content, variableValues);
+        setProcessedContent(newContent);
+      } else {
+        // 如果没有填写任何变量，使用原始内容
+        setProcessedContent(prompt.content);
+      }
+    }
+  }, [prompt?.content, variableValues, promptVariables.length]);
+
   // 不再需要手动更新starCount，usePromptActions会处理
 
   // 使用常量而不是状态，因为目前没有更新评论的功能
@@ -98,7 +153,9 @@ const PromptDetail = () => {
 
   const handleCopy = () => {
     if (!prompt) return;
-    navigator.clipboard.writeText(prompt.content);
+    // 如果有变量，复制处理后的内容，否则复制原始内容
+    const contentToCopy = promptVariables.length > 0 ? processedContent : prompt.content;
+    navigator.clipboard.writeText(contentToCopy);
     setCopied(true);
     toast.success("提示词已复制到剪贴板");
     setTimeout(() => setCopied(false), 2000);
@@ -258,9 +315,36 @@ const PromptDetail = () => {
                   </Button>
                 </div>
               </div>
+              {promptVariables.length > 0 && (
+                <div className="mb-4 p-4 border border-purple-200 dark:border-purple-800 rounded-lg bg-purple-50 dark:bg-purple-900/20">
+                  <div className="flex items-center gap-2 mb-3 text-purple-700 dark:text-purple-300">
+                    <Variable className="h-5 w-5" />
+                    <h4 className="font-medium">自定义变量</h4>
+                  </div>
+                  <div className="grid gap-3">
+                    {promptVariables.map((variable) => (
+                      <div key={variable} className="grid gap-1.5">
+                        <Label htmlFor={`var-${variable}`} className="text-sm text-purple-700 dark:text-purple-300">
+                          {variable}
+                        </Label>
+                        <Input
+                          id={`var-${variable}`}
+                          value={variableValues[variable] || ""}
+                          onChange={(e) => handleVariableChange(variable, e.target.value)}
+                          placeholder={`输入 ${variable} 的值...`}
+                          className="border-purple-200 dark:border-purple-800 focus-visible:ring-purple-300"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="bg-slate-50 dark:bg-slate-800/50 rounded-lg p-6">
                 <pre className="whitespace-pre-wrap text-slate-700 dark:text-slate-300 text-sm">
-                  {prompt.content}
+                  {Object.values(variableValues).some(value => value.trim() !== "")
+                    ? processedContent
+                    : highlightVariables(prompt.content)}
                 </pre>
               </div>
             </CardContent>

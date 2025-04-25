@@ -1,9 +1,9 @@
 # 技术架构文档
-# Prompt Hub: AI 提示词共享平台
+# GitPrompt: AI 提示词共享平台
 
 ## 系统概述
 
-Prompt Hub 使用 React、TypeScript 和 Supabase 构建的现代 Web 应用程序。架构遵循客户端-服务器模型，前端处理 UI 渲染和状态管理，而 Supabase 提供包括身份验证、数据库和存储在内的后端服务。
+GitPrompt 是使用 React、TypeScript 和 Supabase 构建的现代 Web 应用程序。架构遵循客户端-服务器模型，前端处理 UI 渲染和状态管理，而 Supabase 提供包括身份验证、数据库和存储在内的后端服务。
 
 ## 架构图
 
@@ -42,48 +42,77 @@ Prompt Hub 使用 React、TypeScript 和 Supabase 构建的现代 Web 应用程�
 前端遵循基于组件的架构，包含以下关键元素：
 
 1. **页面**: 代表整个屏幕的顶层组件
-   - Home/Index
-   - PromptDetail
-   - SubmitPrompt
-   - Profile
-   - Categories
-   - 认证页面
+   - Index (首页)
+   - PromptDetail (提示词详情)
+   - SubmitPrompt (提交/编辑提示词)
+   - Profile (个人主页)
+   - Categories (分类浏览)
+   - AccountSettings (账户设置)
+   - Login/SignUp (登录/注册)
+   - NotFound (404页面)
 
 2. **组件**: 可重用的 UI 元素
-   - 布局组件（Navbar、Footer）
-   - 提示词相关组件（PromptCard、PromptForm、PromptStats）
-   - UI 组件（按钮、输入框、模态框）
-   
+   - 布局组件
+     - Navbar (导航栏)
+     - Footer (页脚)
+   - 提示词相关组件
+     - PromptCard (提示词卡片)
+     - PromptForm (提示词表单)
+     - PromptList (提示词列表)
+     - PromptBadges (提示词标签)
+     - PromptDerivationTree (提示词派生树)
+   - 首页组件
+     - Hero (首页横幅)
+     - FeaturedPrompts (精选提示词)
+     - CategoriesSection (分类部分)
+   - UI组件 (基于shadcn/ui)
+     - Button, Card, Dialog, Input等
+
 3. **Hooks**: 共享逻辑的自定义 hooks
    - `useAuth`: 认证状态和功能
    - `usePromptForm`: 提示词表单处理
    - `usePublicPrompts`: 公共提示词数据获取
    - `usePromptActions`: 提示词操作（标星、复制等）
+   - `usePromptDelete`: 提示词删除逻辑
 
 4. **Contexts**: 跨组件共享状态
    - `AuthContext`: 用户认证状态
 
-5. **Utils**: 工具函数和辅助工具
+5. **Constants**: 常量定义
+   - `categories.ts`: 提示词分类定义，包含value、label和icon
+   - `promptStates.ts`: 提示词状态枚举
+
+6. **Utils**: 工具函数和辅助工具
 
 ### 数据库架构
 
 核心数据库表及其关系：
 
 ```
-┌────────────┐     ┌──────────────┐     ┌──────────────┐
-│  profiles  │     │    prompts   │     │shared_prompts│
-├────────────┤     ├──────────────┤     ├──────────────┤
-│ id         │◄────┤ user_id      │     │ id           │
-│ username   │     │ id           │◄────┤ prompt_id    │
-│ avatar_url │     │ title        │     │ shared_by    │
-└────────────┘     │ description  │     │ shared_with  │
-                   │ content      │     └──────────────┘
+┌────────────┐     ┌──────────────┐
+│  profiles  │     │    prompts   │
+├────────────┤     ├──────────────┤
+│ id         │◄────┤ user_id      │
+│ username   │     │ id           │
+│ avatar_url │     │ title        │
+└────────────┘     │ description  │
+                   │ content      │
                    │ category     │
                    │ tags         │
                    │ is_public    │
-                   │ share_count  │
-                   └──────────────┘
+                   │ stars_count  │     ┌──────────────┐
+                   │ fork_count   │     │PromptState枚举│
+                   │ view_count   │     ├──────────────┤
+                   │ state        │     │ NORMAL = 0   │
+                   │ fork_from    │     │ DELETED = 1  │
+                   └──────────────┘     └──────────────┘
 ```
+
+`prompts` 表中的 `state` 字段用于实现提示词的逻辑删除功能，其值由 `PromptState` 枚举定义：
+- `NORMAL = 0`: 正常状态
+- `DELETED = 1`: 已删除（逻辑删除）
+
+这种设计允许用户"删除"提示词而不实际从数据库中移除记录，便于未来可能的恢复功能。
 
 ## 数据流
 
@@ -94,19 +123,22 @@ Prompt Hub 使用 React、TypeScript 和 Supabase 构建的现代 Web 应用程�
 
 2. **提示词创建流程**:
    - 用户填写 PromptForm 组件
-   - 表单数据通过 React Hook Form 验证
+   - 表单数据通过 React Hook Form 和 Zod 验证
    - 提交后数据发送到 Supabase 数据库
+   - 默认创建为私有提示词，只能从个人主页进行公开分享
    - UI 通过 TanStack Query 缓存更新
 
 3. **提示词发现流程**:
    - FeaturedPrompts 组件通过 usePublicPrompts hook 获取数据
-   - 数据在 PromptCard 组件中展示
+   - 数据在 PromptCard 组件中展示，描述内容严格只显示一行
+   - 分类数据从 src/constants/categories.ts 中获取，包含icon字段
    - 分页/过滤通过查询参数处理
 
 4. **社交互动流程**:
-   - 标星/复制/分享操作触发数据库更新
-   - 计数器在 UI 中乐观更新
-   - 后台重新获取确保数据一致性
+   - Star功能：通过更新提示词的`stars_count`字段实现，不使用单独的`prompt_stars`表
+   - Fork功能：仅在提示词详情页面可用，成功提交后增加原提示词的`fork_count`
+   - 复制功能：将提示词内容复制到剪贴板
+   - 计数器在UI中乐观更新，后台重新获取确保数据一致性
 
 ## 安全考虑
 
@@ -141,9 +173,30 @@ Prompt Hub 使用 React、TypeScript 和 Supabase 构建的现代 Web 应用程�
 2. **性能监控**: 计划用于未来阶段
 3. **使用分析**: 计划用于未来阶段
 
+## 用户界面设计与交互
+
+1. **提示词卡片设计**:
+   - 移除实际Prompt内容但保留其他元素
+   - 描述内容严格只显示一行，溢出内容省略
+   - 标签显示在横线上方
+   - 只在详情页面显示Fork按钮，首页卡片不显示
+   - 个人主页中只有私有提示词显示编辑按钮
+
+2. **个人主页设计**:
+   - 显示用户获得的Star数量、提示词被Fork次数和拥有的提示词数量
+   - 统计数据直接显示在标签名称后面，而不是单独的卡片
+   - 提供全部提示词、公开提示词、私有提示词和收藏提示词的分类浏览
+
+3. **交互特性**:
+   - 创建提示词、编辑提示词和Fork提示词的表单按钮添加交互效果
+   - 首页的"Create Prompt"按钮重定向到提示词提交页面
+   - Fork计数只在Fork页面提交后才增加
+   - 私有提示词支持逻辑删除而非物理删除
+
 ## 未来技术考虑
 
 1. **扩展**: 随内容增长计划数据库分片
 2. **实时功能**: 考虑使用 Supabase Realtime 实现协作功能
 3. **API 开发**: 用于与 AI 工具集成的外部 API
 4. **移动应用**: 考虑使用 React Native 实现原生移动体验
+5. **提示词恢复**: 实现已删除提示词的恢复功能

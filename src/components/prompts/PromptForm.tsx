@@ -11,7 +11,7 @@ import { categories } from "@/constants/categories";
 import type { PromptFormValues } from "@/hooks/usePromptForm";
 import type { UseFormReturn } from "react-hook-form";
 import { Controller } from "react-hook-form";
-import { Loader2, X } from "lucide-react";
+import { Loader2, X, Info } from "lucide-react";
 
 interface PromptFormProps {
   form: UseFormReturn<PromptFormValues>;
@@ -229,7 +229,10 @@ export const PromptForm = ({
                   disabled={isSubmitting}
                   className={tags.length > 0 ? "border-green-300 focus-visible:ring-green-200" : ""}
                 />
-                <p className="text-xs text-gray-500">提示：按Enter或逗号添加标签</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <Info className="h-3.5 w-3.5 text-slate-500" />
+                  <p className="text-xs text-slate-500">按Enter或逗号添加标签</p>
+                </div>
               </>
             )}
           />
@@ -260,6 +263,12 @@ export const PromptForm = ({
               />
             )}
           />
+          <div className="flex items-center gap-1.5 mt-1">
+            <Info className="h-3.5 w-3.5 text-slate-500" />
+            <p className="text-xs text-slate-500">
+              使用 <code className="bg-slate-100 dark:bg-slate-800 px-1 py-0.5 rounded">{'{{variable_name}}'}</code> 语法在提示词中定义可自定义变量
+            </p>
+          </div>
           {form.formState.errors.content && (
             <p className="text-sm text-destructive">{form.formState.errors.content.message}</p>
           )}
