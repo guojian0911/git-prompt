@@ -162,8 +162,18 @@ export const ModelSettingsProvider: React.FC<{children: React.ReactNode}> = ({ c
           ];
       }
 
+      // 去除重复的模型ID
+      const uniqueModels = models.reduce((acc: ModelInfo[], current) => {
+        const isDuplicate = acc.find((item) => item.id === current.id);
+        if (!isDuplicate) {
+          return [...acc, current];
+        }
+        console.warn(`发现重复的模型ID: ${current.id}`);
+        return acc;
+      }, []);
+
       // 更新可用模型
-      setAvailableModels(models);
+      setAvailableModels(uniqueModels);
 
       // 更新提供商最后测试时间
       saveProvider({
@@ -321,6 +331,13 @@ export const ModelSettingsProvider: React.FC<{children: React.ReactNode}> = ({ c
       {
         id: "claude-3-opus-20240229",
         name: "Claude 3 Opus",
+        provider: provider.id,
+        contextWindow: 200000,
+        capabilities: ["chat"]
+      },
+      {
+        id: "claude-3-5-sonnet-20240620",
+        name: "Claude 3.5 Sonnet",
         provider: provider.id,
         contextWindow: 200000,
         capabilities: ["chat"]

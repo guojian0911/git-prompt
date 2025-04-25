@@ -34,10 +34,19 @@ const ModelList: React.FC<ModelListProps> = ({
     );
   }
 
+  // 去除重复的模型ID
+  const uniqueModels = models.reduce((acc: ModelInfo[], current) => {
+    const isDuplicate = acc.find((item) => item.id === current.id);
+    if (!isDuplicate) {
+      return [...acc, current];
+    }
+    return acc;
+  }, []);
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {models.map((model) => (
-        <Card 
+      {uniqueModels.map((model) => (
+        <Card
           key={model.id}
           className={cn(
             "cursor-pointer transition-all hover:shadow-md",
@@ -60,7 +69,7 @@ const ModelList: React.FC<ModelListProps> = ({
             {model.capabilities && (
               <div className="flex flex-wrap gap-1">
                 {model.capabilities.map((capability) => (
-                  <span 
+                  <span
                     key={capability}
                     className="px-2 py-0.5 bg-secondary text-secondary-foreground rounded-full text-xs"
                   >

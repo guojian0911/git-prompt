@@ -167,8 +167,11 @@ const ModelCaller: React.FC<ModelCallerProps> = ({ prompt }) => {
           <Textarea
             value={response}
             readOnly
-            className="min-h-[200px] font-mono text-sm"
+            className="min-h-[300px] font-mono text-sm w-full resize-y"
           />
+          <div className="text-xs text-muted-foreground">
+            提示：可以拖动文本框底部调整高度，或使用滚动条查看完整内容
+          </div>
         </div>
       )}
     </div>

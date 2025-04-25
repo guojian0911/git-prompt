@@ -10,20 +10,26 @@ interface VariableInputProps {
 }
 
 const VariableInput: React.FC<VariableInputProps> = ({ prompt, onChange }) => {
-  // 提取变量
-  const variables = extractVariables(prompt);
-
   // 变量值状态
   const [values, setValues] = useState<Record<string, string>>({});
+  // 存储提取的变量
+  const [variables, setVariables] = useState<string[]>([]);
 
-  // 初始化变量值
+  // 提取变量并初始化变量值
   useEffect(() => {
-    const initialValues: Record<string, string> = {};
-    variables.forEach(variable => {
-      initialValues[variable] = values[variable] || "";
+    // 提取变量
+    const extractedVars = extractVariables(prompt);
+    setVariables(extractedVars);
+
+    // 初始化变量值 - 使用函数式更新以避免依赖values
+    setValues(prevValues => {
+      const initialValues: Record<string, string> = {};
+      extractedVars.forEach(variable => {
+        initialValues[variable] = prevValues[variable] || "";
+      });
+      return initialValues;
     });
-    setValues(initialValues);
-  }, [prompt, variables]);
+  }, [prompt]); // 只在prompt变化时重新初始化
 
   // 处理变量值变化
   const handleVariableChange = (variable: string, value: string) => {
